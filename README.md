@@ -13,7 +13,7 @@ Nothing is built yet. Current position: **pre-M0**.
 
 | | |
 |---|---|
-| API verification | Done — see [`docs/api-verification.md`](docs/api-verification.md) |
+| API verification | Done — see [`api-verification.md`](api-verification.md) |
 | M0 — conversion spike | **Blocked.** Needs one real manual PDF and a Mac with Xcode. |
 | M1 and later | Not started |
 
@@ -76,13 +76,14 @@ SQLite FTS5 — all Apple system frameworks with no fee, no key, and no approval
 ## Repository layout
 
 ```
-docs/
-  plan.md                 the specification
-  prompt.md               the working agreement
-  api-verification.md     Apple API surface confirmed against current docs, pre-M0
+plan.md                 the specification
+prompt.md               the working agreement
+api-verification.md     Apple API surface confirmed against current docs, pre-M0
 ```
 
 `plan.md` is the specification and `prompt.md` is the working agreement — read `plan.md` first.
+Neither is committed yet.
+
 `api-verification.md` records what was confirmed against Apple's documentation before any code
 was written, which parts of the plan need correcting as a result, and what could not be
 verified. It also lists the open decisions blocking M0.
