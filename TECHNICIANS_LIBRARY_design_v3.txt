@@ -1,0 +1,1232 @@
+
+=====================================
+TECHNICIANS LIBRARY — DESIGN DOCUMENT
+=====================================
+
+Version 3 — revised 7 August 2026
+Base: TECHNICIANS_LIBRARY_design_v2.txt of 7 August 2026, itself a revision
+of your app_design_document.txt of the same date.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+HOW TO READ THIS REVISION
+-------------------------
+
+Three kinds of edit were made:
+
+- [FIXED] — a contradiction or error corrected outright. The reasoning is stated. Reverse it if you disagree.
+- [DECIDE] — a real fork where only you can choose. I picked a default so the document stays buildable, and marked it. These are collected again at the end.
+- [NEW] — a section that did not exist. Drafted so it can be argued with rather than left blank.
+
+Nothing has been deleted. Where I changed your wording, the old wording is quoted.
+
+Version 3 edits are marked [v3] and follow the same convention: old wording quoted, reasoning stated, nothing silently deleted. Version 3 was checked against the actual repository code and against measured WCAG contrast values, so its corrections cite what was verified.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+SUMMARY OF WHAT CHANGED IN VERSION 3
+------------------------------------
+
+1. Accent-chip contrast corrected — measured in all five themes, not two. Only two themes fail, and version 2's fix said "darken" where physics requires "lighten".
+2. The Coffee Tan fix's own description corrected — it does not reorder the same five colors, and it left two themes sharing an identical button color.
+3. Fault code rule rewritten manufacturer-agnostic. Siemens, Yaskawa, Allen-Bradley or anyone else — conventions are read from each manual's own fault table, never from a brand list built into the app.
+4. The README's one-second lookup requirement carried into the search rules. It appeared in no version of this document.
+5. The gap between "normalization is per family" and "a query arrives before a manual is chosen" closed: matching runs per manual, under that manual's own convention.
+6. Backup decided by default and added to the open decisions.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+SUMMARY OF WHAT CHANGED IN VERSION 2
+------------------------------------
+
+1. Search-mode contradiction resolved — Section 1 and Section 5 said opposite things about who picks the card type.
+2. Coffee Tan palette rebuilt — its accent was unreadable (1.1:1 contrast) and its panel/background were inverted against your own stated rule.
+3. Where the Foundation Model is and is not used, stated explicitly.
+4. Manuals now keep their original PDF alongside the converted text. "Open Referenced Page" cannot work otherwise.
+5. All ten rules in Section 2 drafted.
+6. Three missing screens drafted: the manual page view, the import flow, the settings sub-screens.
+7. Font sizes rewritten to scale with the phone's text-size setting.
+8. Image card confirmed not to fit the fold cover screen; a fix is proposed.
+9. Settings close gesture — the document described it two different ways.
+10. Recent Searches "hover" replaced; iPhones have no hover.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+=======
+PURPOSE
+=======
+
+To be a centralized and easy to access library of manuals and pictures, powered by Apple's on-device Foundation Model, assisting Electrical, Mechanical, Hydraulic and Automotive technicians by keeping their important files ready for rapid use.
+
+
+===================
+OVERVIEW OF THE APP
+===================
+
+1. The brain. Apple's on-device Foundation Model. It is used to catalog, organize and retrieve images and manuals added to the user's library, using text generation, summarization, entity extraction, and text and image understanding.
+
+[FIXED] Where the model runs, and where it does not. Your Section 4 says the card's explanation is "an exact copy & paste from that part of a manual," and your Section 5 says "the app does not analyze images." Both are good rules, but they conflict with calling the model "the brain" unless you say where it works. Stated plainly:
+
+- At import, the model works. It reads a new manual and pulls out fault codes, page numbers, object names and item names. It reads a new photo and helps draft its caption fields. This happens once, when the file is added, and the user is not waiting on it.
+- At search, the model does not write the answer. The card's explanation band is lifted verbatim from the manual. The capture note is the technician's own words. Neither is generated.
+- At search, the model may help find things. Turning a messy query into search terms is a fair use of it. Writing the answer is not.
+
+This is why the cards carry citations rather than confidence scores: the app is quoting, not reasoning.
+
+[FIXED] What happens when the model is not available. Apple Intelligence can be switched off, and some devices do not support it at all. The document did not say what happens then. Rule:
+
+  | The library, the search, and both card types work with the model unavailable. Import still works — it falls back to the PDF's own text layer and the photo's filename, and the user fills in the caption fields by hand. Nothing the user has already imported stops working. If the model is unavailable, import says so plainly at the time; it does not fail silently and it does not queue work the user cannot see.
+
+2. The heart. The device's own storage, holding manuals and images long after the user has forgotten they exist.
+
+3. Retrieval. Simple and obvious ways to search for pictures and manuals in the library.
+
+  | Your line 11 ends mid-sentence: "This is accomplished by ". Completed as:
+
+3. Simple and obvious ways to search for what has been added. This is accomplished by one chat box that accepts three kinds of query — a fault code, a part or item description, or a plain question — and returns a citation card rather than a conversation.
+
+[DECIDE] The app's name. This document says Technicians Library. Your repository, its README, and the design files all say Snap Manual. Pick one and rename the other. This document uses Technicians Library throughout.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+===================
+SECTION 1 — SCREENS
+===================
+
+  * Main chat
+      Notes: "Welcome Technician" centered on the chat background, Brush Script MT at the welcome size. Chat box reading "chat", + to its left, ⚙ to its right. Tapping the box raises the keyboard. Two scope buttons sit directly above the box — Image Search left, Manual Search right. Sending a message empties the box; Return sends, as does the send button.
+
+  * Plus sheet
+      Notes: Balloons from the + icon, 31% of screen height, sits above the input row. Lighter than the chat background. PDF left, IMAGE right, spiked divider between them running from 10% to 90% of the box height.
+
+  * Settings
+      Notes: Slides in from the right at 90% of the screen, main screen visible around its edges. Library / Theme / Accessibility / Instructions. license and Bug Report at the bottom. Dismissed by dragging rightwards from the device's left edge.
+
+  * Theme
+      Notes: Behind the Theme button. Switches between the five palettes, live.
+
+  * Manual page view
+      Notes: [NEW] — see Section 6. Opened by "Open Referenced Page".
+
+  * Import flow
+      Notes: [NEW] — see Section 7. Opened by PDF or IMAGE in the plus sheet.
+
+  * Library / Accessibility / Instructions
+      Notes: [NEW] — see Section 8.
+
+  * Answer card
+      Notes: Two types. The manual card cites object, manual, page and fault code. The image card cites the saved photo. Which one comes back is decided by what was found — see the scope-button rule below.
+
+
+  | Your table said "Switches all five palettes live." Changed to "switches between the five palettes" — you switch between them, not all of them.
+
+
+[FIXED] THE SCOPE BUTTONS — A CONTRADICTION THAT HAD TO BE SETTLED
+------------------------------------------------------------
+
+Your document says both of these:
+
+- Section 1 and Main Screen design: "The selection decides which of the two reply cards the next query returns, and switching it clears the thread."
+- Section 5: "The user does not choose a mode; the app matches against both indexes and returns the card type that fits the hit."
+
+Those cannot both be true. Settled as follows, which keeps what is good in each:
+
+  | The two buttons set the search scope, not the card type.
+  |
+  | - Manual Search searches manuals only.
+  | - Image Search searches saved photos only.
+  | - Neither selected searches both. This is the default on launch.
+  |
+  | The card type is always decided by what was actually found: a manual hit returns a manual card, a photo hit returns an image card. The user cannot ask for a manual card and be handed a photo, because with Manual Search on, photos were never searched.
+  |
+  | Switching scope does not clear the thread. Your original said it did. Throwing away a technician's last four lookups because they tapped the wrong button is a punishment for a mis-tap. Scope applies to the next query and leaves history alone.
+  |
+  | Scope is a filter, not a mode. It narrows the search — which also helps speed, since half the index is skipped.
+
+Reasoning: Section 5's instinct is right that the card must describe what was found rather than what was requested. Section 1's instinct is right that a technician who knows they want a photo should not have to wade through manual hits. Scope buttons give you both.
+
+
+DEVICE METRICS
+--------------
+
+  * iPhone 16 / 17 / 18, Pro, Max, Air, Standard
+      Points: 393 × 852
+      Ratio: 19.5:9
+      Dynamic island: 126 × 37
+
+  * Fold — cover screen
+      Points: 384 × 561
+      Ratio: 14.6:10
+      Dynamic island: 88 × 26 (30% smaller)
+
+  * Fold — inner screen
+      Points: 820 × 561
+      Ratio: 14.6:10
+      Dynamic island: 126 × 37
+
+
+The inner screen adds a Recent Searches rail at regular width. That is a width-class branch, not a device check.
+
+[FIXED] Height matters as well as width. The fold's two screens are 561 points tall against the standard phone's 852. That is not a small difference — it is 291 points, and the image card does not survive it. See Section 5, part 5.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+==============
+COLOR PALETTES
+==============
+
+Each theme uses five colors from one source image. panel is a mix of the two darkest, used for the plus sheet and settings sheet so they read as lighter than the chat background.
+
+  * Airfield Blue (default)
+      background: #111617
+      panel: #262E30
+      button: #4A585D
+      text: #99ADB6
+      accent: #3F7D98
+
+  * Ocean Teal
+      background: #172321
+      panel: #1F403D
+      button: #2E7572
+      text: #A4CED4
+      accent: #F0A45F
+
+  * Olive Green
+      background: #11370E
+      panel: #264616
+      button: #4C6124
+      text: #E7E5E3
+      accent: #B5AC84
+
+  * Walnut Brown
+      background: #2A271F
+      panel: #3D3326
+      button: #5F4834
+      text: #F4EBE2
+      accent: #D2A782
+
+  * Coffee Tan
+      background: #25262E
+      panel: #35363C
+      button: #5F4834
+      text: #DAC493
+      accent: #776B5B
+
+
+Ocean Teal renders the plus-sheet icons and their labels in #F0A45F.
+
+
+[FIXED] COFFEE TAN WAS BROKEN. TWO SEPARATE FAULTS.
+---------------------------------------------------
+
+Your values were bg #45464B, panel #25262E, button #776B5B, text #DAC493, accent #5F4834.
+
+Fault 1 — the panel was darker than the background. Your own rule directly above the table says panel is "a mix of the two darkest… so they read as lighter than the chat background." In Coffee Tan the background was the lighter of the two. The plus sheet and settings sheet would have appeared as dark holes rather than raised panels — the opposite of every other theme, on the same app, with no explanation to the user.
+
+Fault 2 — the accent was invisible. The accent color carries both source stamps and the only button on each card, with background-colored text sitting on it. Coffee Tan's accent #5F4834 against its background #45464B measures 1.10:1. The readable minimum for text is 4.5:1. At 1.10 the chips would have been very nearly the same color as the screen behind them. The stamps and the "Open Referenced Page" button would have effectively disappeared.
+
+The fix makes the darkest color the background, rebuilds panel as the mix of the two darkest per your rule, and moves the accent to #776B5B, which measures 2.89:1 against the new background. Better, but see the warning below — Coffee Tan remains the weakest of the five and you may want to re-pull it from the source image.
+
+[v3] Version 2 described its own fix as "reorders the same five colors." It does not. The old background #45464B is dropped entirely, and the new panel #35363C is a fresh mix rather than one of the original five. The rebuilt theme also lands its button on #5F4834 — the identical hex to Walnut Brown's button — so two themes that are supposed to come from different source images now share a color. Both points strengthen open decision 8: re-pull this palette from its source image rather than keep patching it.
+
+
+[DECIDE] ACCENT CHIP CONTRAST FAILS IN TWO OF THE FIVE THEMES
+-------------------------------------------------------------
+
+[v3] Version 2 titled this section "marginal in every theme" and measured only two themes. That was wrong in both directions. Measured in all five — WCAG relative luminance, accent against background, the two colors the chip and its background-colored text actually put side by side:
+
+  * Airfield Blue
+      Accent chip contrast: 4.00:1 — fails (v2 said 4.08)
+
+  * Ocean Teal
+      Accent chip contrast: 7.84:1 — passes
+
+  * Olive Green
+      Accent chip contrast: 5.83:1 — passes
+
+  * Walnut Brown
+      Accent chip contrast: 6.81:1 — passes
+
+  * Coffee Tan (after fix)
+      Accent chip contrast: 2.89:1 — fails
+
+
+4.5:1 is the readable minimum for text this size, and 8.5px is below the 11-point floor Apple recommends for anything a user must read. The stamps are the band you describe as the trust anchor of the whole card — the thing a technician checks to confirm the answer matches the machine in front of them. In Airfield Blue and Coffee Tan they are the least readable text in the app; in the other three themes they already pass and need nothing.
+
+Two options, pick one:
+
+- A. Raise the stamp text to 11px minimum and lighten the two failing accents until each reaches 4.5:1 against its background. [v3] Version 2 said "darken each accent" — on these dark backgrounds that is backwards. The chip's text is the background color, so contrast rises as the accent moves away from the background: lighter, not darker. Executed as version 2 wrote it, the fix would have made both failing themes worse. Only Airfield Blue and Coffee Tan need touching.
+- B. Drop the filled chip. Set the stamps in accent-colored text directly on the panel surface, which measures far better, and keep the chip only for the action button.
+
+Default taken in this document: A, since the filled chip is doing real work visually. Two palettes need one pass to hit 4.5:1; the other three already do.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+====
+TYPE
+====
+
+Two faces are specified: Brush Script MT for the welcome line on the main page, Times New Roman for the chat box word and all text on the settings page. All other text is SF (-apple-system). Monospace is used for source and page references.
+
+
+[FIXED] SIZES NOW SCALE WITH THE PHONE'S TEXT-SIZE SETTING
+----------------------------------------------------------
+
+Your document specifies fixed pixel sizes throughout — 22, 20, 15, 13, 12.5, 11.5, 10, 9, 8.5. Fixed sizes mean the Accessibility button in Settings cannot change anything, and a technician who has turned text up system-wide gets nothing. Rewritten as scaling styles, with your numbers kept as the value at the phone's standard text size:
+
+  * Welcome line
+      Style: Custom, scaled
+      Default size: 22
+      Notes: Brush Script MT
+
+  * Chat box word
+      Style: Custom, scaled
+      Default size: 17
+      Notes: See the note below
+
+  * Settings buttons
+      Style: Custom, scaled
+      Default size: 20
+      Notes: Times New Roman
+
+  * Card explanation / title
+      Style: Body, semibold
+      Default size: 15
+      Notes: Scales
+
+  * Fact table data
+      Style: Custom, scaled
+      Default size: 13
+      Notes: Monospace
+
+  * Capture note
+      Style: Footnote
+      Default size: 12.5
+      Notes: Scales
+
+  * Recent search line 1
+      Style: Subheadline
+      Default size: 11.5
+      Notes: Scales
+
+  * Source stamps
+      Style: Caption 2
+      Default size: 11 min
+      Notes: Was 8.5 — raised, see above
+
+  * Recent search lines 2–3
+      Style: Caption 2
+      Default size: 11 min
+      Notes: Was 8.5 — raised
+
+  * Rail header
+      Style: Caption 2
+      Default size: 11 min
+      Notes: Was 9 — raised
+
+  * license / Bug Report
+      Style: Caption 1
+      Default size: 13 min
+      Notes: Was 10 — see below
+
+
+Above the largest standard text sizes the layout may stop scaling and stay put, but nothing below 11 points ships.
+
+[FIXED] The two footer links. They were 10px plain blue. Two problems: 10px is below the readable floor, and plain blue is the only color in the app that ignores the active theme — on Olive Green and Walnut Brown it will look like a mistake. Changed to 13 minimum, in the theme's accent color, underlined so they still read as links.
+
+
+[DECIDE] TIMES NEW ROMAN IN THE CHAT BOX
+----------------------------------------
+
+Kept, because it is your instruction and it is a deliberate part of the app's character. Flagging the cost once and then leaving it alone:
+
+The chat box is where a technician reads back F0429 before pressing send. In Times New Roman a zero and a capital O are very close, as are a one and a capital I. A misread there sends them to the wrong page, which is the one failure this app exists to prevent. Everywhere else in the app you already use monospace for codes and page numbers, precisely because it separates those characters.
+
+Suggestion, if you want to keep the look and lose the risk: leave the placeholder word "chat" in Times New Roman, and set the text the user actually types in monospace. The box looks the way you designed it when empty, and becomes unambiguous the moment it matters.
+
+
+[DECIDE] THERE IS STILL NO MICROPHONE
+-------------------------------------
+
+Neither the original brief nor this version mentions voice input. Your repository contains code that specifically understands spoken fault codes — "eff triple oh seven", "naught", "double oh". That code is written and tested and currently unreachable, and a technician wearing gloves next to a running machine is the exact person who needs it.
+
+Not added to the design, because where the button goes is your call. Three obvious homes: inside the chat box on the right, replacing the send button until there is text; as a third icon in the input row; or long-pressing the chat box. Flagging it as a decision rather than picking one.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+===================================
+ADDITIONS NOT IN THE ORIGINAL BRIEF
+===================================
+
+- Recent Searches rail — on the fold's inner screen, rather than stretching the chat column.
+- Scope buttons — Image Search and Manual Search above the chat box, narrowing what the next query searches.
+- CLEAR — affordance above a sent message, for resetting the prototype. [FIXED] This is demo scaffolding and does not ship. Noted here so it is not built by mistake.
+- Grab handle — on the settings sheet's left edge, making the swipe target visible.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+==================
+MAIN SCREEN DESIGN
+==================
+
+The user opens the app on an iPhone 16, 17 or 18, or on the fold's cover or inner screen. They are presented with a standard chat interface, with a message centered on the chat background in Brush Script MT at the welcome size reading "Welcome Technician". At the bottom center is a chat box, rectangular with rounded corners. Tapping it raises the keyboard the user has selected in their iPhone's settings. Inside the box, in Times New Roman, the word "chat" is centered. To its left is a plus sign (+). To its right is a cog wheel (⚙) opening the settings page.
+
+Directly above the chat box are two buttons of equal width — "Image Search" on the left, "Manual Search" on the right. These appear on the main page only. The selected button is filled with the theme's accent color; the unselected one is an outline. They set search scope per the rule in Section 1. Tapping the selected button again deselects it, returning to searching both.
+
+When the user sends a message the chat box empties and the text moves into the sent bubble above it, leaving the box showing "chat" again and ready for the next query. The message can be sent with the send button inside the chat box or with the Return key.
+
+
+[DECIDE] THE EMPTY MIDDLE
+-------------------------
+
+On a 393 × 852 screen, "Welcome Technician" sits alone in roughly 600 points of empty space above the input row. That is most of the screen, doing nothing.
+
+Ordinary chat apps are empty at rest because their content is on somebody else's server. Yours is already on the phone. You have also already designed the thing that belongs in that space — the Recent Searches rail — and then restricted it to the one screen most users will never see.
+
+Suggestion: on the standard phone and the fold cover, show the last three or four searches under the welcome line, in the same three-line entry shape as the rail. Same component, same data, different placement. Tapping one re-runs it.
+
+Not applied, because it changes the screen you have looked at most and you should see it before it goes in.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+=====================================
+PLUS BUTTON (+) — DESIGN AND FUNCTION
+=====================================
+
+When + is tapped a small rectangular box opens, emerging from the + icon like a balloon, with rounded corners. Its color is a lighter shade than the chat background. It takes up the bottom third of the screen, excluding the area covered by the chat box and the plus and cog icons. Inside are two icons — PDF on the left, IMAGE on the right. Between them runs a line from 90% of the box height down to 10%, both ends tapering to a spike. Below the left icon is the word PDF; below the right, IMAGE.
+
+What happens when they are tapped is now Section 7.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+====================================
+COG BUTTON (⚙) — DESIGN AND FUNCTION
+====================================
+
+When the cog is tapped a page emerges from the right like a slide. It does not cover the whole screen — the main screen stays visible around its edges. Picture a rectangle filling 100% of the screen with a smaller rounded rectangle covering 90% laid on top: two layers, the smaller above.
+
+The settings page holds four rectangular buttons with rounded corners, centered on the page. Top to bottom: Library, Theme, Accessibility, Instructions. At the bottom of the page are two words with embedded links and no button styling: license bottom left, Bug Report bottom right. All text on the settings page is Times New Roman. The four buttons use the settings-button size; the two footer links use the footer size (see Type).
+
+[FIXED] The close gesture was described two ways. Your Section 1 table says "Drag the sheet's left edge rightwards to dismiss it." Your Cog section says "drag from left edge of their device to the right." Those are different gestures — the sheet's edge sits 10% inside the device's edge, and the strip between them is showing the main screen underneath.
+
+Settled as: drag rightwards starting anywhere on the sheet's left edge, including the visible strip of main screen to its left. Both readings work, the target is bigger, and the grab handle marks it. The sheet slides to the right edge and disappears.
+
+What the four buttons open is now Section 8.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+=======================
+SECTION 2 — THE LIBRARY
+=======================
+
+
+STRUCTURE
+---------
+
+    Library
+    │
+    ├── Manuals
+    │   ├── <manual-id>/
+    │   │   ├── source.pdf        original, never modified
+    │   │   ├── text.md           extracted text, used for search
+    │   │   └── meta.json         name, page map, codes found
+    │
+    └── Images
+        └── <image-id>/
+            ├── original.<ext>    jpeg / dng / heic / png
+            └── meta.json         caption fields
+
+
+[FIXED] The original PDF is kept. Your structure showed Files containing only .md. Markdown has no pages. "Open Referenced Page" promises to open the manual at the exact page a fault code is on, and that is impossible if the PDF has been thrown away — there is nothing left to open and nothing for a page number to point at. Both files are kept: the PDF is what the user sees, the markdown is what the search reads.
+
+[FIXED] Files renamed to Manuals. The settings button is called Library and the folder was called Files; "Files" also collides with Apple's own Files app, which is where users will import from. Manuals says what is in it.
+
+[DECIDE] [v3] Backup. The Instructions screen tells the user where their files live, but no version of this document decided whether the library is included in the phone's own backup. Default taken: it is. The library folder is marked for inclusion in the device's standard backup, because a technician's phone dies in the field and years of captured fault photos should not die with it. This is the operating system backing up the app's container the same way it backs up every other app's — the app itself still makes no network call, so the README's hard constraint is untouched. Reverse it only if library sizes prove impractical.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+RULES FOR THE FUNCTIONING OF THE APP
+------------------------------------
+
+All ten were headings with nothing under them, and Section 4 refers back to five of them by name. Drafted below. These are first drafts meant to be argued with.
+
+
+Indexing rule
+
+
+Indexing happens once, at import, never during a search.
+
+When a manual is added: extract its text page by page; write text.md with a page marker at each page break; record in meta.json the manual's name, its page map, and every fault code found. When a photo is added: record its caption fields.
+
+A search reads the finished index and nothing else. No file is opened, converted, or analyzed while the user is waiting.
+
+If import is interrupted, the manual is marked incomplete and is excluded from search until it finishes. A half-indexed manual that silently returns half its pages is worse than one that is honestly missing.
+
+
+Search parameter rule
+
+
+A query is matched against, in this order:
+
+1. Fault codes — exact match against codes found at import, after normalizing per the Fault code rule.
+2. Object and item names — the machine and the part.
+3. Manual titles and page headings.
+4. Body text — full text of every indexed page.
+5. Image caption fields — machine, item, problem, and the free-text note.
+
+Scope buttons restrict which of these are searched: Manual Search uses 1–4, Image Search uses 5, neither uses all.
+
+A code match outranks a text match. A hit in an object or item name outranks a hit in body text. Where two manuals both contain the code, the one whose object name matches the query wins; if that does not separate them, the more recently opened manual wins.
+
+Bare numbers are not searched alone. A query of "7" or "0420" with no letter and no word like fault, code, error or alarm returns nothing rather than every page containing that digit. Across a library of a few thousand pages a bare number is on nearly all of them.
+
+[v3] The speed requirement, carried in from the README. The repository's README names the app's one hard requirement — a fault-code lookup puts the relevant manual page on screen in under one second, on the device, with no network — and no version of this document repeated it, which is how a requirement quietly stops being tested. Stated here as an acceptance criterion: send to card on screen in under one second on the standard phone, and "Open Referenced Page" to the rendered page in under one second again. The Indexing rule above is what makes this achievable — a search reads the finished index and nothing else — and any future change that puts work between send and card is measured against this number before it ships.
+
+
+Manual organization rule
+
+
+One imported PDF is one manual. Manuals are not merged, split, or nested.
+
+A manual belongs to one or more objects (machines). The link is made at import and can be corrected later from the Library screen. A manual with no object attached still searches; it just cannot be narrowed by machine.
+
+
+Manual name rule
+
+
+Display name, in order of preference: the title printed on the manual's cover page; failing that, the publisher's document number (750-UM001); failing that, the filename as imported.
+
+The publisher's document number is always shown in the source stamp even when a friendlier title exists, because that number is what is printed on the machine's paperwork and what a technician will be asked for.
+
+Names are editable from the Library screen. Editing a name never changes the file on disk.
+
+
+Page number rule
+
+
+A manual has two page numbers and they are rarely the same.
+
+- Printed page — the number printed on the paper, as the manual's own index refers to it. Front matter is often roman numerals, or unnumbered.
+- File page — the position in the PDF, counting from 1 at the cover.
+
+Page 214 of a manual is commonly file page 228 or thereabouts, because of the cover, legal pages and table of contents.
+
+The rule:
+
+- The card displays the printed page, because that is the number a technician will say out loud and the number the manual's own index uses.
+- "Open Referenced Page" jumps to the file page, because that is where the content actually is.
+- The mapping between the two is built at import and stored in meta.json.
+- If the mapping cannot be established, the card displays the file page and marks it — p. 228 (file) — rather than displaying a printed number that is wrong. A confidently wrong page number is the worst failure this app can produce.
+
+
+Fault code rule
+
+
+A fault code is a short identifier a machine displays to name a failure: an optional letter prefix, then digits, sometimes with a separator between them. F0007, P0420, A051 and 7 are all this shape.
+
+[v3] Version 2 defined three named families — "Rockwell and similar industrial," "Automotive (OBD-II)," and "No code" — and hung behavior on which brand family a manual belonged to. Rewritten, because who makes the machine does not matter. A Siemens drive, a Yaskawa inverter, an Allen-Bradley controller and an automotive scan tool all emit codes of the same shape, and the app categorizes and sorts them all the same way: prefix first, then number. What differs between makers is convention, not kind — how wide the digit run is printed, and whether leading zeros are significant (a scan tool's P0420 is never P420; many drive manuals print F0007 and F7 for the same code). Conventions are real and must be honored, but they are a property of each manual, read from that manual's own fault table at import — never from a list of manufacturers built into the app.
+
+How the convention is read, per manual:
+
+- If the manual's fault table prints every code at one fixed width, leading zeros are significant for that manual and codes are preserved exactly as printed.
+- If the table prints the same code at varying widths, leading zeros are not significant for that manual, and codes are canonicalized as prefix plus number.
+- If the manual has no code table at all — common in hydraulic and mechanical manuals — lookups there are by part name or plain question, and the fault-code half of the stamp is empty rather than blank-padded.
+
+The convention is stored in meta.json and can be corrected from the Library screen. Adding a manual from a maker the app has never seen requires no code change and no app update — there is no brand list to be missing from.
+
+Consequences that must be built in:
+
+- Matching is per manual, under that manual's convention. The query's code is expanded into the surface forms each searched manual could print — F7, F 7, F-0007 and so on — and matched against the codes actually extracted from that manual at import. [v3] This closes a gap version 2 left open: it said normalization was "per family, with the family a property of the manual," but a query arrives before any manual is chosen, so there was nothing to normalize against. Resolved: the query is never normalized in the abstract. Each manual's index is searched under that manual's own convention, so the match is correct for every manual it came from, whatever the query looked like.
+- A code is only read out of a query when it is shaped like one, or when the query contains a word like fault, code, error, alarm or trip.
+- When a query contains several numbers, the code is the one nearest the fault word, not the first one in the sentence. "kinetix 5700 fault 7" means fault 7 on that machine, not fault 5700. The current code in the repository gets this wrong.
+- Part and catalog numbers are never read as fault codes. 2198-D032-ERS3 contains D032 and must not resolve to fault D32.
+- Sorting and grouping ignore convention entirely: codes order by prefix, then numerically. F7 sorts the same wherever it appears and whoever printed the manual it came from.
+
+
+Fault code name rule
+
+
+The short human-readable name the manual gives the code — "Port 4 Adapter", "Overspeed Trip".
+
+Taken verbatim from the manual's fault table at import. Never invented, never rephrased. If the manual gives no name, the field is empty and the card shows the code alone.
+
+The name is searchable, so "port 4 adapter" finds F0429 without the technician remembering the number.
+
+Not shown as its own band on the card — you removed that band deliberately, and the code in the second stamp plus the explanation below it already carry it.
+
+
+Object name rule
+
+
+An object is a physical machine in the plant or shop. It has two names:
+
+- Asset tag — what is painted or stickered on the machine. FL-03, LINE-2-SLITTER. This is what the card shows, because a plant has six forklifts and the tag is the only thing that separates them.
+- Friendly name — "Forklift", "Number 2 Slitter". Used for searching and for the Library screen, so a technician who does not know the tag can still find it.
+
+Both are searchable. Objects are created by the user, not by the model. The model may suggest one at import from what it reads on the cover page; the user confirms it.
+
+An object may have many manuals and many photos. That is the join that makes "everything about FL-03" possible later.
+
+
+Item name rule
+
+
+An item is a part or subsystem of an object — "Seat", "Port 4 Adapter", "Retractor", "DPI cable".
+
+Items are free text, not a fixed list. A fixed list would be wrong within a week in a mixed-trade shop.
+
+Items are matched loosely: "seat belt", "seatbelt" and "belt, seat" all find the same thing. The model's entity extraction is a reasonable way to do this at import — pulling the item names out of a manual's headings so the user does not type them by hand.
+
+An item is always recorded against an object. "Seat" alone means nothing; "FL-03 · Seat" is a location.
+
+
+Image name rule
+
+
+A photo keeps its original filename, untouched. IMG_0417 is its identity and the user may have it written down elsewhere.
+
+Around it are stored: capture date (from the photo's own data, not the import date — this is the load-bearing field per Section 5); object (asset tag); location (bay, line, area); item; problem — a short phrase, three or four words, "Torn belt", "Retractor jammed"; and capture note — the technician's own sentences, quoted verbatim and never edited by the app.
+
+Object, item and problem are the three columns of the image card's fact table, which is why they are short.
+
+The model may draft item and problem from the photo at import. The user confirms before saving. A photo saved without confirmation is searchable by date and object only, and the Library screen lists it as needing detail.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+======================================
+SECTION 3 — THE RECENT SEARCHES COLUMN
+======================================
+
+(fold inner screen only, unless the suggestion in Main Screen Design is taken)
+
+
+WHAT IT IS
+----------
+
+The inner screen is 820 points wide against the cover screen's 384. That extra width is not given to the chat column. A reply card 700 points wide is harder to read than one 350 wide, and the chat box does not become easier to hit by being twice as long. The width goes instead to a fixed column down the left edge, 236 points wide, separated from the chat by a single hairline in the line color. The chat column keeps the proportions it has on every other screen.
+
+The column appears at regular width and above. It is a width-class branch, not a device check — a folded phone showing 384 points does not get the column; the same phone unfolded to 820 points does.
+
+
+WHAT IS IN IT
+-------------
+
+A header reading "RECENT SEARCHES" in uppercase monospace, dim, letter-spaced. Below it, the seven most recent searches, newest at the top.
+
+Each entry is three lines:
+
+- Line 1 — the query the user actually typed, verbatim, in SF at 500 weight in the full-contrast text color. Not a cleaned-up version, not the resolved fault name. What they typed.
+- Line 2 — "object name · manual name" in uppercase monospace, dim.
+- Line 3 — "page number · fault code" in the same style, directly under line 2.
+
+Lines 2 and 3 are the same two stamps that appear at the top of the card that answered the search. An entry here is a compressed copy of the card it produced.
+
+For a search that returned an image card, lines 2 and 3 carry that card's equivalents: item and image filename, then asset tag and capture date. The shape of the entry does not change between the two card types.
+
+Entries have no leading rule and no separator. The vertical padding and the three-line rhythm keep them apart; seven ruled rows in a 236-point column reads as a table rather than a history.
+
+
+[FIXED] TOUCH STATES, NOT HOVER
+-------------------------------
+
+Your text says "Hovering an entry lifts it onto the panel color." iPhones have no hover. Replaced:
+
+  | A pressed entry lifts onto the panel color for as long as the finger is down. A 2px transparent left border is reserved so the entry that produced the card currently on screen can be marked without the text shifting.
+
+
+[NEW] WHAT TAPPING ONE DOES
+---------------------------
+
+Not stated in your version. Rule:
+
+  | Tapping an entry re-runs that exact query and scrolls the thread to the card it produces. It does not restore an old card from history — manuals and photos may have been added since, and a stale card presented as fresh is the same failure as a wrong page number.
+  |
+  | Swiping an entry leftwards removes it from the list. It does not delete anything from the library.
+
+
+WHY THE TYPED QUERY AND NOT THE RESULT
+--------------------------------------
+
+The first line is what the user typed because that is what they will recognize. A technician who searched "Forklift seat broken seat belt" two hours ago remembers that sentence; they do not necessarily remember it resolved to IMG_0417. Leading with the resolved name would make the user translate their own memory into the app's vocabulary before they could find anything.
+
+The two stamp lines underneath are for the opposite case: two similar queries typed twenty minutes apart, where the typed text alone does not say which one found the right page.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+=================================
+SECTION 4 — THE MANUAL REPLY CARD
+=================================
+
+Last updated: 7 August 2026
+
+
+WHAT IT IS
+----------
+
+The answer card carries the app's output. A technician types a machine name and item name and a fault code or description into the chat box; the card is what comes back.
+
+It is not a chat reply. It is a citation of a manual held in the app's storage. That distinction drives every decision below.
+
+  | Renamed from "non-image reply card" to manual card throughout. The old name defined it by what it is not, and appeared four different ways in your document ("non-image reply card", "manual-type card", "the non-image card", "NON-IMAGE REPLY CARD"). One name.
+
+
+1. SHAPE
+--------
+
+  Alignment -- Left-aligned, opposite the user's own message bubble, which sits right-aligned above it in the button color.
+
+  Width -- 96% of the chat column. The user's query bubble is capped at 70%. The card is deliberately the widest object on screen — it is the payload, not a remark.
+
+  Corners -- 4px top-left, 16px on the other three. Standard inbound-message treatment: the square corner points back at the sender. The card inherits chat grammar even though its contents are a document extract, so the eye reads it as "the answer to what I just asked" without a label saying so.
+
+  Surface -- Panel color on the app background, 1px hairline border. One step of elevation, no shadow. The card is a page torn out of a manual and laid on the desk, not a floating dialog.
+
+  Padding -- 13px top, 14px sides, 12px bottom. Tight. On a 393-point phone held at arm's length in a plant, wasted margin costs a line of text.
+
+
+Internal rhythm — three stacked bands, top to bottom, separated by 8–11px:
+
+1. source stamp row
+2. plain-language explanation
+3. action row
+
+The gaps grow slightly toward the bottom, so the card reads as tightening at the top and opening out at the action.
+
+
+2. BAND BY BAND
+---------------
+
+
+(a) Source stamp row
+
+
+- object name · manual name — filled accent chip, monospace, uppercase, 11px minimum
+- page number · fault code — filled accent chip, monospace, uppercase, 11px minimum
+
+This band lets the user check at a glance that the card matches what they asked. See the Object name rule, Manual name rule, Page number rule and Fault code rule.
+
+  | [FIXED] Size raised from 8.5px. See Type. This is the band you describe as the card's trust anchor and it was the smallest text in the app.
+
+  | [FIXED] Where a manual has no fault-code system, the second chip reads p. 214 alone. It is not padded with a placeholder.
+
+
+(b) Plain-language explanation
+
+
+600 weight, body size, full-contrast text color, 2.0 line height.
+
+  | "The adapter in port 4 stopped communicating with the drive. Reseat the DPI cable, confirm adapter power, then clear the fault."
+
+This is an exact copy of the manual's own text — the part containing the instructions to diagnose or solve the problem named by the fault code in band (a). It is not written, summarized or rephrased by the model. The band expands vertically as needed; this is the most important information on the card and it is never truncated.
+
+  | [NEW] Long extracts. Some manuals answer a fault code with two pages of procedure. Rule: the band shows the extract in full up to roughly 12 lines, then continues behind a "Show more" that expands in place. It never scrolls inside itself and never opens a second screen — a technician who has already found the right page should not have to navigate to read it.
+
+  | [NEW] Say when it is quoted. Because the model is the app's stated brain, users will reasonably assume this paragraph was written by it. It was not, and the difference matters — one is the publisher's instruction, the other would be a guess. The band opens with a subtle quotation treatment: a 2px accent rule down its left edge. No label, no badge, no stamp; you removed those deliberately and they are not coming back. Just the mark that says these are not our words.
+
+
+(c) Action row
+
+
+Centered: "Open Referenced Page" — filled accent button, 9px radius.
+
+Opens the source manual at the exact page where the fault code is, per the Page number rule. It is the only interactive element in the card, to reduce confusion.
+
+
+3. WHY THIS SHAPE AND NOT A CHAT REPLY
+--------------------------------------
+
+- Trust. An unattributed paragraph about a fault code is indistinguishable from a guess. The card's first row is a citation and its last row is immediate access to the source.
+- Scanning. A technician needs a few things from a manual: the name of the fault, its description, and its cause.
+- Repair. When the lookup returns the wrong entry, a structured card fails visibly — the fault code in band (a) does not match what the drive shows. A paragraph fails quietly.
+
+
+4. WHAT IT DELIBERATELY OMITS
+-----------------------------
+
+  * Confidence score
+      Why: The match is text, not probability. A percentage would imply reasoning the app does not do.
+
+  * Related-codes list
+      Why: Speculative content on a screen used one-handed beside a running machine.
+
+  * Feedback controls
+      Why: Nothing to rate — the app did not author the text.
+
+  * Timestamp or avatar
+      Why: Chat furniture that says nothing about the fault.
+
+  * Image thumbnail
+      Why: Figures live behind Open Referenced Page at full size; a 40px thumbnail of a wiring diagram is noise.
+
+  * Fault title band
+      Why: An earlier draft carried "F0429 — Port 4 Adapter" between the stamps and the explanation. Removed: the code is already in the second stamp and the object name in the first.
+
+  * Match-type note
+      Why: An earlier draft carried "TEXT MATCH · NO MODEL · NO NETWORK" beside the button. Removed so the action row holds one centered button and nothing else.
+
+
+5. [NEW] WHAT HAPPENS WHEN THERE IS NO ANSWER
+---------------------------------------------
+
+Not covered in your version, and it will happen more often than a hit — a technician will search for a machine whose manual was never imported.
+
+  | A search with no result returns a card in the same shell, with no stamps, reading: "Nothing in your library matches that." Below it, one line naming what was searched — "Searched 4 manuals, 1,446 pages" — and a single button, "Import a manual", opening the flow in Section 7.
+  |
+  | It is a card and not a chat bubble because the shape is the app's grammar for "here is the result," and an empty result is still a result. It must never be phrased as an apology or as a failure of understanding; the library simply does not contain it.
+
+
+6. HOW IT VARIES BY SURFACE
+---------------------------
+
+  * Standard phone (393 × 852)
+      Behavior: Card fills the chat column at 96%. Full three bands.
+
+  * Fold cover (384 × 561)
+      Behavior: Same card, same bands, same type sizes. The card was sized against this screen first.
+
+  * Fold inner (820 × 561)
+      Behavior: Card keeps its width relative to the chat column; the extra horizontal space goes to the Recent Searches rail, not into stretching the card.
+
+  * Themes
+      Behavior: Every color is a variable: accent (both stamps, the button), panel (surface), line (borders), text (explanation), bg (text on the accent chips). Structure is identical across all five palettes. Only Ocean Teal changes anything outside the card, in the plus sheet's icons.
+
+
+  | [FIXED] The fold-inner row previously restated the whole Recent Searches specification. Removed — it is Section 3 and duplicating it means two places to update and two places to disagree.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+================================
+SECTION 5 — THE IMAGE REPLY CARD
+================================
+
+Last updated: 7 August 2026
+
+The second of two card types. The two share a shell and a source-first logic, and differ in what sits in the middle.
+
+
+1. WHAT IT ANSWERS
+------------------
+
+A technician types a machine, an item and a description:
+
+  | "Forklift seat broken seat belt"
+
+That is not a fault code and will not be found in a manual. It describes something a technician photographed on a previous shift and saved to the device. The image card is what comes back.
+
+The two card types exist because the chat box accepts two kinds of input that look identical while being typed. A fault code resolves against manual text; a description resolves against the caption fields attached to saved photos.
+
+  | [FIXED] Your paragraph here said "The user does not choose a mode." That contradicted Section 1's scope buttons. Corrected per the rule in Section 1: the scope buttons narrow what is searched; the card type still follows what was found. Your reasoning was right and is preserved — the card is what tells the user which kind of answer they got, because its first row is a filename and a date rather than a page and a code.
+
+
+2. SHAPE
+--------
+
+Identical to the manual card in every structural respect: left-aligned, 96% of the chat column, 4px top-left corner with 16px elsewhere, panel surface, 1px hairline border, 13/14/12px padding. The user's query bubble sits above it, right-aligned, 70% max width.
+
+This is deliberate. The two card types are two answers from the same tool, not two features. The shell staying constant means the differences inside read as information rather than as a change of context.
+
+Six stacked bands, three more than the manual card:
+
+1. source stamp row
+2. title
+3. the photograph
+4. capture note
+5. fact table
+6. action row
+
+Band 3 is the addition, and the reason for the card.
+
+
+3. BAND BY BAND
+---------------
+
+
+(a) Source stamp row
+
+
+- IMG_0417 · 12 MAR 2026 — filled accent chip, monospace, 11px minimum
+- FL-03 · BAY C — dim monospace, unboxed, 11px minimum
+
+Same accent-chip treatment as the manual card's stamps, holding the equivalent facts. Only the first is a filled chip; the second is dim and unboxed, because a photo's asset tag and bay are context rather than something to transcribe.
+
+The filename is the photo's identity; the date is what makes it usable. A photo of a broken seat belt taken in March means something entirely different from one taken this morning — the technician needs to know whether they are looking at a fault already dealt with or one they are about to walk into.
+
+Date is the most load-bearing field in this card, which is why it is in the first six words.
+
+The dim half carries asset tag and location. FL-03 rather than "Forklift", because the plant has more than one forklift and the tag is what is painted on the machine.
+
+
+(b) Title
+
+
+Seat Belt — Webbing Torn — 600 weight, body size, full-contrast.
+
+Item, then condition. The manual card has no title band; its stamps carry the identifying facts alone. A photo cannot do that, because a filename says nothing about what is in the picture. The user typed "seat" and "broken seat belt"; the title restates that in the words the photo was filed under, so a wrong match is visible immediately.
+
+
+(c) The photograph
+
+
+4:3, full card width, 7px radius, hairline border. Overlaid bottom-right: a 1 / 3 counter.
+
+The photo is the answer; everything else in the card is a label for it. It sits above the prose because a technician looking for a saved image recognizes the right one faster than they can read a description of it.
+
+4:3 rather than square or 16:9 because it is the native aspect of a phone camera's back-facing still, and cropping a fault photo to fit a card loses the detail someone knelt on a concrete floor to capture.
+
+The 1 / 3 counter says three saved photos matched this query. It is a result count, not a gallery control, and it belongs on the image because the number is a property of the picture, not of the search. Its purpose is to stop the user acting on the first photo when two others might show the same belt from a better angle.
+
+  | [NEW] How to reach photos 2 and 3. Your version states the counter and never says how to get to the others, which makes it a tease. Rule: swipe the photo sideways within the card to move between matches. The counter updates. Every other band updates with it — each match has its own title, note and table. The card is showing one photo at a time out of three, not three photos in a stack.
+
+  | Note on the current mock: the image region shows a placeholder marked SAVED PHOTO with the capture dimensions. Drop a real image into this slot when one is available; the frame is sized for it.
+
+
+(d) Capture note
+
+
+Two sentences, footnote size, dim color, 1.5 line height.
+
+  | "Retractor jammed, webbing frayed through at the buckle side. Unit tagged out pending belt replacement."
+
+This is the text the technician typed when saving the photo, quoted verbatim. It occupies the same slot as the manual card's explanation and is dimmed the same way, but its status is different and worth stating plainly: in the manual card that paragraph is the publisher's text; here it is a colleague's note. It is unverified, it may be stale, and it is the only thing in the card that carries an opinion.
+
+It sits below the photo so the picture is judged first and the note read as commentary on it.
+
+Sentence one describes what the photo shows, because a photo of frayed webbing does not by itself say the retractor is jammed. Sentence two is the disposition — what was done about it. Disposition is what stops two technicians tagging out the same machine twice.
+
+  | [NEW] The two-sentence cap is a display cap, not a storage cap. A longer note is stored in full and shown in full on the image's own screen. The card shows the first two sentences.
+
+
+(e) Fact table
+
+
+  * Forklift
+      ITEM: Seat
+      PROBLEM: Torn belt
+
+
+Header cells 700 weight, monospace, dim. Data cells 600 weight, monospace, full-contrast. Every cell center-aligned.
+
+Bordered, 7px radius, hairline under the header, data row on the lighter button surface. The table is not full width — it shrinks to fit its contents and centers on the card, so a short set of values does not sit inside a box of empty space. Column widths are set by the longer of the two cells above and below, keeping header and data aligned while letting the table scale horizontally with the words in it.
+
+The three columns are the three things the user typed, echoed back as the terms the photo is filed under. That is what makes the archive searchable next time, and showing it teaches the filing convention without a help screen. It is also the fastest way to catch a wrong match: if the user asked about a forklift seat and the table says Scissor Lift, the card is wrong and says so in three words.
+
+The type is larger and heavier than the capture note above it because these six words are looked up, not read.
+
+
+(f) Action row
+
+
+Centered: "Open image" — filled accent button, 9px radius.
+
+Opens the photo full-screen at capture resolution. The card shows it at roughly 350 points wide; the detail that matters in a fault photo is frequently smaller than that.
+
+Centered and alone, matching the manual card's action row.
+
+
+4. WHAT IT DELIBERATELY OMITS
+-----------------------------
+
+  * Thumbnail strip of the other matches
+      Why: The 1 / 3 counter reports them and the swipe reaches them; a row of 40px thumbnails of similar-looking fault photos helps nobody at that size.
+
+  * Detected-object tags
+      Why: See below.
+
+  * Delete or edit
+      Why: This is a search result, not an editing booth. Both live on the Library screen — Section 8.
+
+  * Confidence score
+      Why: Same reasoning as the manual card: the match is text, not probability.
+
+  * Match-type note
+      Why: An earlier draft carried "CAPTION MATCH · NO MODEL · NO NETWORK" opposite the button. Removed from both card types so the action row holds one centered button and nothing else.
+
+  * Logged-by field
+      Why: An earlier draft gave the table a LOGGED column naming who took the photo. Removed in favor of PROBLEM, which describes the fault rather than the photographer.
+
+
+  | [FIXED] "The app does not analyze images." Your reason for omitting detected-object tags was that the app does not analyze images. But the Purpose section says the model provides "image understanding" and is used to catalog images. Both can be true, stated properly:
+  |
+  | The app analyzes a photo once, at import, to help the user fill in its caption fields — and the user confirms the result. It does not analyze photos at search time, and it never shows tags it generated as though they were facts about the picture. What the card displays is what a human confirmed. That is why there are no detected-object tags: not because nothing was detected, but because nothing unconfirmed is shown.
+
+
+5. HOW IT VARIES BY SURFACE
+---------------------------
+
+  * Standard phone (393 × 852)
+      Behavior: Full six bands, photo at 4:3 across the card.
+
+  * Fold cover (384 × 561)
+      Behavior: See the fit problem below.
+
+  * Fold inner (820 × 561)
+      Behavior: Card holds its width in the chat column; extra width goes to the Recent Searches rail. The photo does not grow to fill the screen — "Open image" is the affordance for that. Same height problem as the cover screen.
+
+  * Themes
+      Behavior: Every color is a variable: accent (chip, button), panel (surface), line (borders), text (title, table values), dim (capture note, secondary monospace), btn (photo backing, table data row). Structure identical across all five palettes.
+
+
+[FIXED] The image card does not fit the fold screens
+
+
+Your document calls the fold cover "the tightest fit in the app" and caps the capture note at two sentences because of it. The cap is not enough. Rough measure, card at ~350 points wide:
+
+  * Padding top + bottom
+      Height: 25
+
+  * Source stamps
+      Height: 20
+
+  * Title
+      Height: 20
+
+  * Photo at 4:3
+      Height: 262
+
+  * Capture note, 2 lines
+      Height: 40
+
+  * Fact table
+      Height: 60
+
+  * Action row
+      Height: 40
+
+  * Five inter-band gaps
+      Height: ~50
+
+  * Total
+      Height: ~517
+
+
+Both fold screens are 561 points tall, of which the status bar and input row take roughly 110, leaving about 450 for the thread. The card is around 517. It overflows by roughly 70 points before the user's own query bubble is counted, and before the keyboard is raised.
+
+The photo is the cause — it is more than half the card.
+
+Fix: cap the photo's height at 38% of the available thread height on compact-height screens. At 450 points that is 171, putting the card near 425 and leaving room for the query bubble above it. The photo crops to its center rather than shrinking the card's width, keeping the shell identical across surfaces as you intended. "Open image" is one tap away and shows it uncropped.
+
+This wants checking against a real device rather than taken on my arithmetic — my numbers are estimates from the band descriptions, not measurements.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+======================================
+SECTION 6 — [NEW] THE MANUAL PAGE VIEW
+======================================
+
+This screen did not exist in any version of the document. It is the screen "Open Referenced Page" opens, and by the logic of the rest of this document it is the most important screen in the app — everything else is a way of getting here.
+
+Drafted, not decided. Argue with it.
+
+
+WHAT IT IS
+----------
+
+The manual's original PDF, open at the file page holding the fault code, rendered at full quality.
+
+Not an extract, not the markdown, not a re-flow. The page as printed, including its tables and figures, because a fault-code table that survived conversion badly is still readable as a picture of itself.
+
+
+PRESENTATION
+------------
+
+Full screen, over the chat, sliding up from the bottom. The chat is still there behind it and returning to it does not lose the thread.
+
+  Top bar -- Manual name on the left. Printed page number center — p. 214 — in monospace, matching the card's stamp. Close on the right.
+
+  The page -- Fills the rest. Pinch to zoom, double-tap to fit width, drag to pan. Swipe left and right to turn pages.
+
+  Bottom -- A thin page strip showing where in the manual this page sits. Draggable for coarse navigation. Hides on zoom.
+
+
+THE ONE THING THAT MUST NOT BE MISSED
+-------------------------------------
+
+The fault code the user searched for is highlighted on the page.
+
+A fault table page can hold sixty codes. Landing on the right page and leaving the technician to find their code among sixty is most of the way to failing the job. The code's position is recorded at import, and it is marked when the page opens — a soft accent-colored highlight behind the code, not a box or an arrow.
+
+If the position was not captured at import, the page still opens; it simply is not marked. It is never guessed at.
+
+
+WHAT IS NOT HERE
+----------------
+
+- No editing, annotating or highlighting by the user. This is a reference, not a workbook.
+- No sharing or exporting. The manual is the publisher's; the app is a shelf, not a distributor.
+- No AI summary layer over the page. The card already said what the manual says.
+
+
+[DECIDE]
+--------
+
+Whether "Open Referenced Page" should return to chat automatically when the user backs out, or stay open as its own tab. Default here: it closes and returns to the chat, because the chat is the app's home and the technician's next question is usually a follow-up.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+=================================
+SECTION 7 — [NEW] THE IMPORT FLOW
+=================================
+
+What happens after PDF or IMAGE is tapped in the plus sheet. Not previously described.
+
+
+TAPPING PDF
+-----------
+
+1. Apple's standard document picker opens. The user picks one or more PDFs from anywhere on the phone — Files, iCloud Drive, a mail attachment.
+2. The plus sheet closes. A row appears at the top of the chat reading "Importing — 1 of 3" with a progress bar.
+3. Import runs in the background. The app stays usable throughout, and the existing library stays searchable.
+4. As each manual finishes it appears in the library and becomes searchable. A line in the chat says so: "PowerFlex 755 AC Drive · 512 pages · ready".
+5. If the model found an object name on the cover page, the same line offers it: "Attach to FL-03?" with confirm and change. Per the Object name rule, the user confirms; the model does not decide.
+
+Failures are stated, not swallowed. A PDF with no text layer that also fails OCR says so — "No readable text. This manual can be opened but not searched." It still imports; it is still openable; it is honestly marked as not searchable.
+
+Time. A 512-page manual is minutes, not seconds. The progress row says how many pages are done. It is never presented as instant and the user is never blocked.
+
+
+TAPPING IMAGE
+-------------
+
+1. Apple's standard photo picker opens. The user picks one or more photos.
+2. The plus sheet closes and a caption sheet opens for the first photo.
+3. The sheet shows the photo, its capture date pulled from its own data, and four fields: Object, Item, Problem, Note.
+4. If the model is available it drafts Item and Problem from the photo. The drafts appear in the fields as editable text, clearly marked as suggestions. Nothing saves until the user confirms.
+5. Save moves to the next photo. Skip saves the photo with date and object only; the Library screen lists it as needing detail.
+
+
+[DECIDE] TAKING A PHOTO FROM INSIDE THE APP
+-------------------------------------------
+
+The plus sheet offers IMAGE, which means choosing an existing photo. A technician standing in front of the fault wants to take one. Whether that is a third icon in the plus sheet, or a camera button inside the IMAGE picker, is your call. Not added.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+==========================================
+SECTION 8 — [NEW] THE SETTINGS SUB-SCREENS
+==========================================
+
+Three of the four settings buttons had names and nothing behind them. Drafted.
+
+Each opens on top of the settings sheet, sliding in from the right in the same way the settings sheet itself does, and dismissing the same way.
+
+
+LIBRARY
+-------
+
+What the app holds, and the only place anything can be changed or removed.
+
+Two tabs — Manuals and Images, matching the storage structure.
+
+- Manuals lists every imported manual: name, publisher's document number, page count, attached object, import date. Tapping one opens its detail — rename, attach or change object, re-run indexing, delete. Deleting warns that it removes the file from the device, and says so in those words.
+- Images lists every saved photo as a grid of thumbnails with date. Tapping one opens the photo full-screen with its four caption fields, all editable. Delete is here.
+- Anything needing detail is listed first, in both tabs — manuals that failed to index, photos saved without item or problem. This is the only place the app asks the user for work, and it never nags from anywhere else.
+
+At the bottom: "4 manuals · 1,446 pages · 38 photos", and storage used.
+
+
+ACCESSIBILITY
+-------------
+
+The screen that makes the Type section mean something.
+
+- Text size — follows the phone's system setting by default, with an in-app override for those who want this app larger than everything else.
+- Bold text — follows the system setting.
+- Reduce motion — the settings sheet, plus balloon and page view stop sliding and cross-fade instead.
+- Higher contrast — raises the dim colors in every palette toward the full-contrast text color. The stamps, the capture note and the rail's lines 2 and 3 are the text this exists for.
+- Increase tap targets — pads the plus, cog and scope buttons out to a larger minimum. For gloves.
+
+All five are switches or steppers. None of them changes the layout's structure; they change size, color and motion only.
+
+
+INSTRUCTIONS
+------------
+
+A short read, not a manual for the manual app.
+
+Six sections, each a paragraph and an illustration from the design: what the app is for; adding a manual; adding a photo; how to search, with real examples of all three query kinds; what the two cards are telling you; where your files actually live and what happens if you delete the app.
+
+Ends with the app version and a link to the same Bug Report address as the footer.
+
+The last section is not filler. A technician whose phone is replaced needs to know before that day whether the library goes with it.
+
+
+THEME
+-----
+
+Already built. Five palettes, applied live to every screen. One addition: the currently selected palette is marked, and the screen behind stays visible while switching so the effect is seen rather than described.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+===============================
+APPENDIX — DECISIONS STILL OPEN
+===============================
+
+Collected from the [DECIDE] marks above.
+
+1. The app's name — Technicians Library, or Snap Manual? Two names in use across the document and the repository.
+2. Accent chip contrast — raise sizes and lighten the two failing accents, Airfield Blue and Coffee Tan, to reach 4.5:1 (default taken), or drop the filled chip and set the stamps as accent text on the panel. [v3] The other three themes already pass and need nothing.
+3. Times New Roman in the chat box — keep as-is, or keep it for the placeholder and set typed text in monospace.
+4. The microphone — in or out, and where. The code for it already exists and is unreachable.
+5. The empty middle of the main screen — leave it, or show the last three or four searches there.
+6. The manual page view — closes back to chat (default taken), or persists as its own place.
+7. Taking a photo from inside the app — third icon in the plus sheet, camera inside the picker, or not at all.
+8. Coffee Tan — accept the rebuilt values, or re-pull the palette from the source image once permission comes back. [v3] Re-pulling is now the stronger option: the rebuild dropped one of the original five colors and left Coffee Tan's button identical to Walnut Brown's.
+9. [v3] Backup — the library ships marked for inclusion in the device's standard backup (default taken), or is excluded if size or licensing demands it.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+===========================================
+APPENDIX — CARRIED OVER FROM THE REPOSITORY
+===========================================
+
+Items in manual-library that this document now contradicts, and which need updating there:
+
+1. README hard constraint 1, "no network calls" — still consistent, since the model is on-device. No change needed, but the constraint should be reworded to say why the on-device model satisfies it, so a future reader does not reach for the cloud model to "improve" answers.
+2. README's Snap Manual name and fault-code-only framing — now broader: manuals and photos, four trades, three query kinds. [v3] Also broader in make: the README frames the library around "Allen-Bradley and similar," and per the rewritten Fault code rule the app is manufacturer-agnostic. Needs rewriting to match this document.
+3. The three-tier structure — the tiers were about surviving with no model. That question is now answered in Overview above. The README's tier language should be replaced by it.
+4. FaultCodeNormalizer — hard-codes one convention (variable width, leading zeros never significant) and reads the first number in a sentence as the code rather than the one nearest the fault word. Per the rewritten Fault code rule it needs convention-per-manual matching and the nearest-to-fault-word fix. Rewrite rather than patch.
+5. The Swift package will not compile — files sit at the repository root; Swift expects them in Sources/ and Tests/.
+6. plan.md and prompt.md are not committed — api-verification.md cites them throughout and none of it can be checked.
+7. Palette source images — pending permission from their creator. Note this in the repository so the reason is not lost.
