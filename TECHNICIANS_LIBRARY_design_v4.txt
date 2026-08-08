@@ -3,9 +3,9 @@
 TECHNICIANS LIBRARY — DESIGN DOCUMENT
 =====================================
 
-Version 3 — revised 7 August 2026
-Base: TECHNICIANS_LIBRARY_design_v2.txt of 7 August 2026, itself a revision
-of your app_design_document.txt of the same date.
+Version 4 — revised 8 August 2026
+Base: TECHNICIANS_LIBRARY_design_v3.txt of 7 August 2026, itself a revision
+of v2 and of your app_design_document.txt of the same date.
 
 
 - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -23,6 +23,23 @@ Three kinds of edit were made:
 Nothing has been deleted. Where I changed your wording, the old wording is quoted.
 
 Version 3 edits are marked [v3] and follow the same convention: old wording quoted, reasoning stated, nothing silently deleted. Version 3 was checked against the actual repository code and against measured WCAG contrast values, so its corrections cite what was verified.
+
+Version 4 edits are marked [v4]. It adds two sections that did not exist — Section 9, accessibility, and Section 10, the AFM 3 models — and corrects what those two sections turned up in the rest of the document. Every contrast figure quoted in version 4 was recomputed from the palette hex values rather than carried over, which is how the two failures version 3 did not measure were found.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+SUMMARY OF WHAT CHANGED IN VERSION 4
+------------------------------------
+
+1. Section 9 added — accessibility, mapped to the standard the ADA is actually enforced against. It is an audit of this document, not a wish list: twelve conformance failures are named in the design as written, each with the rule it breaks and a fix.
+2. Two contrast failures found that version 3 did not measure, because version 3 only checked the accent chips. Body text on the button surface fails in two themes, and the two colors the card specification depends on — line and dim — are used in Sections 4 and 5 but defined in no palette.
+3. Candidate hex values computed for every failing pair, so open decision 2 can be closed with numbers rather than a direction.
+4. Section 10 added — how the two on-device AFM 3 models are used, which one runs where, and what happens on a phone that has neither.
+5. The one principle both new sections turn on, already present twice in this document and now named: capability is asked for at runtime, never inferred from the hardware. The app has no brand list, no device list, and no memory-size list.
+6. A contradiction between this document and the repository README settled: the README forbids any model call on the critical path to displaying a page; this document permits the model to turn a messy query into search terms. Both cannot hold on a one-second budget.
+7. The README's three-tier structure and its planned local MLX model are superseded by Section 10, with reasoning.
 
 
 - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -78,6 +95,8 @@ OVERVIEW OF THE APP
 - At import, the model works. It reads a new manual and pulls out fault codes, page numbers, object names and item names. It reads a new photo and helps draft its caption fields. This happens once, when the file is added, and the user is not waiting on it.
 - At search, the model does not write the answer. The card's explanation band is lifted verbatim from the manual. The capture note is the technician's own words. Neither is generated.
 - At search, the model may help find things. Turning a messy query into search terms is a fair use of it. Writing the answer is not.
+
+  | [v4] This third bullet has been narrowed. It contradicts the README's hard constraint 3 and the one-second acceptance criterion — a model call cannot sit between send and card on that budget. Query interpretation is now permitted only after the lexical search has already returned an empty-result card. See Section 10, "The model and the one-second budget." The first two bullets are unchanged.
 
 This is why the cards carry citations rather than confidence scores: the app is quoting, not reasoning.
 
@@ -227,6 +246,8 @@ Each theme uses five colors from one source image. panel is a mix of the two dar
 
 Ocean Teal renders the plus-sheet icons and their labels in #F0A45F.
 
+  | [v4] Five colors per theme is not enough. Sections 4 and 5 both specify a line color for borders and a dim color for the capture note, the source stamps' dim half, the fact table's headers and the rail's lower lines. Neither is defined here or anywhere else, and both carry contrast requirements. Values for all five themes are in Section 9, finding (4). Until they are settled the palettes are incomplete, not merely unmeasured.
+
 
 [FIXED] COFFEE TAN WAS BROKEN. TWO SEPARATE FAULTS.
 ---------------------------------------------------
@@ -345,6 +366,8 @@ Your document specifies fixed pixel sizes throughout — 22, 20, 15, 13, 12.5, 1
 
 
 Above the largest standard text sizes the layout may stop scaling and stay put, but nothing below 11 points ships.
+
+  | [v4] The first half of that sentence is withdrawn — it fails WCAG SC 1.4.4, because the largest standard text size is roughly 135% and the criterion requires 200%. The layout reflows through AX5. See Section 9, finding (5), which also specifies what the fact table and the scope buttons do at those sizes. The 11-point floor stands.
 
 [FIXED] The two footer links. They were 10px plain blue. Two problems: 10px is below the readable floor, and plain blue is the only color in the app that ignores the active theme — on Olive Green and Walnut Brown it will look like a mistake. Changed to 13 minimum, in the theme's accent color, underlined so they still read as links.
 
@@ -1175,6 +1198,8 @@ The screen that makes the Type section mean something.
 
 All five are switches or steppers. None of them changes the layout's structure; they change size, color and motion only.
 
+  | [v4] Superseded by Section 9, which rewrites this screen. Two of the five — Higher contrast and Increase tap targets — were carrying a job a setting cannot do: conformance is measured in the app's default state, so a toggle is never the fix for a default that fails. Both survive as amplifiers above a compliant floor. The screen also gains a statement of which system settings the app honors, which is most of what belongs on it. The last sentence above is kept as a rule and is the right one.
+
 
 INSTRUCTIONS
 ------------
@@ -1197,6 +1222,588 @@ Already built. Five palettes, applied live to every screen. One addition: the cu
 - - - - - - - - - - - - - - - - - - - - - - - - -
 
 
+=====================================
+SECTION 9 — [NEW] [v4] ACCESSIBILITY
+=====================================
+
+Section 8 gives the Accessibility screen five switches and one sentence of justification. That is a settings screen, not an accessibility plan, and the difference matters more here than in most apps: five of those switches exist to compensate for decisions made elsewhere in this document that do not meet the standard in the first place.
+
+This section is written as an audit. It names what in the design as written does not conform, what rule it breaks, and what to do instead. It is not a legal opinion, and nothing here should be filed as a conformance claim — see "The conformance report" at the end for who does that.
+
+
+WHAT THE LAW ACTUALLY REQUIRES
+------------------------------
+
+Worth being precise, because "ADA compliant" is used loosely and the looseness causes real money to be spent on the wrong things.
+
+The ADA itself contains no technical standard for software. There is no clause to read that tells you what contrast ratio to use. What exists instead:
+
+- Title III — private businesses open to the public. No technical standard has ever been adopted by regulation. The Department of Justice's position, and the consistent pattern of court decisions and settlement agreements, is that WCAG at Level AA is the benchmark. So the obligation is real and the standard is borrowed.
+- Title II — state and local government. The DOJ's final rule of April 2024 does adopt a technical standard by regulation: WCAG 2.1 Level AA, for web content and mobile apps. The compliance date for larger public entities has already passed; smaller entities and special district governments follow in April 2027.
+- Section 508 — federal procurement. Incorporates WCAG Level AA by reference. Applies when a federal agency buys the thing.
+
+Why Title II is the one that decides this app's target, rather than Title III:
+
+  | Technicians work for municipal water treatment plants, transit authorities, public utilities, school district maintenance departments and state highway garages. Those are Title II entities. When one of them buys this app, or reimburses a technician for it, or puts it on a managed device, the app is covered by a rule with an adopted technical standard and a compliance date that has already arrived — not by a standard borrowed from case law. Their procurement will ask for a conformance report and will not be able to accept "the ADA doesn't specify" as an answer.
+
+Outside the United States the same work satisfies the European Accessibility Act, applicable since June 2025, whose standard EN 301 549 also resolves to WCAG Level AA. The App Store is one storefront; building to one standard covers both.
+
+
+THE STANDARD THIS APP TARGETS
+-----------------------------
+
+  | WCAG 2.2, Level AA.
+
+Not 2.1, which is what the Title II rule names. 2.2 is a superset — it adds criteria and removes only one that no longer applies to native apps — so conforming to 2.2 AA satisfies the 2.1 AA requirement, Section 508, and EN 301 549 at once. There is no version of this where targeting 2.1 is less work.
+
+It also matters here specifically. Two of the criteria WCAG 2.2 added over 2.1 are the two this design most clearly fails: Dragging Movements and Target Size. Building to 2.1 would let both ship.
+
+Alongside WCAG, the app follows Apple's Human Interface Guidelines where they are stricter, which is often. The 44 × 44 point minimum tap target is nearly double WCAG's 24 × 24. Where they differ, the stricter one wins, and it is usually Apple's.
+
+
+THE RULE THAT GOVERNS EVERY FIX BELOW
+-------------------------------------
+
+  | Conformance is measured in the app's default state, with no accessibility setting touched.
+  |
+  | A toggle that raises contrast is not a fix for insufficient contrast. A toggle that enlarges tap targets is not a fix for tap targets that are too small. The user who needs those settings has to find them, understand them, and turn them on — in an app they have just installed, on a screen buried behind a cog, possibly using the very facility the setting exists to provide. The default is what is tested and the default is what is shipped to everyone.
+
+This single rule invalidates two of Section 8's five switches as stated, and it is the reason the audit below reads as harshly as it does. Both switches survive — but as amplifiers above a compliant floor, not as the floor itself.
+
+
+- - -
+
+
+PART 1 — WHAT IS BROKEN IN THIS DOCUMENT TODAY
+----------------------------------------------
+
+Twelve findings. Each names the design text at fault, the criterion it fails, and the fix.
+
+
+(1) [FIXED] DRAGGING IS THE ONLY WAY TO DO FOUR THINGS
+
+WCAG 2.2 SC 2.5.7, Dragging Movements, Level AA: anything operated by dragging must also be operable by a single pointer without dragging. The design has four drag-only operations and no alternative to any of them:
+
+- Dismissing the settings sheet. The Cog section, as settled in v2: "drag rightwards starting anywhere on the sheet's left edge."
+- Reaching photos 2 and 3 in the image card. Section 5(c): "swipe the photo sideways within the card to move between matches."
+- Removing a recent search. Section 3: "Swiping an entry leftwards removes it from the list."
+- Coarse navigation in the manual page view. Section 6: the page strip, "draggable for coarse navigation."
+
+This is not a screen-reader concern. It is the tremor, the arthritic hand, the prosthesis, the one-handed user on a ladder, and the technician in nitrile gloves — the person this app was designed around. Fixes, all additive, none removing the gesture:
+
+  | Settings sheet — a close control in the sheet, and a tap anywhere on the visible strip of main screen dismisses it too. The strip is 10% of the width and currently does nothing, which is a large target going to waste.
+  | Image card — the 1 / 3 counter becomes tappable, advancing to the next match and wrapping. Chevrons appear at the photo's left and right edges.
+  | Recent searches — long-press an entry for a menu holding Remove. The menu is also where any future per-entry action goes.
+  | Page strip — previous and next page controls in the top bar, and the centered page number is tappable to type a page number directly.
+
+The last of those is worth having regardless of accessibility. A technician who is told "see page 340" wants to type 340.
+
+
+(2) [FIXED] THE ACCENT CHIPS FAIL, AND NOW THERE ARE NUMBERS
+
+Open decision 2 has been sitting on a direction — "lighten the two failing accents" — without values, which is why it is still open. Recomputed and closed out. Every figure below is accent against background, which is what the chip and its background-colored text put side by side:
+
+  * Airfield Blue
+      Now: 4.00:1 — fails
+      Proposed: #468AA8 — 4.74:1
+
+  * Coffee Tan
+      Now: 2.89:1 — fails
+      Proposed: #9B8E7D — 4.70:1
+
+  * Ocean Teal
+      Now: 7.84:1 — passes, unchanged
+
+  * Olive Green
+      Now: 5.83:1 — passes, unchanged
+
+  * Walnut Brown
+      Now: 6.81:1 — passes, unchanged
+
+Both proposed values preserve the original hue and saturation exactly and move lightness only, so the palettes still look like themselves. Both are targeted at roughly 4.7 rather than exactly 4.5, because a value that measures 4.51 in a spreadsheet has no headroom for rounding in the renderer, and a criterion you pass by 0.01 is one you will fail on a device.
+
+There is a second requirement on these two colors that version 3 did not check. WCAG SC 1.4.11, Non-text Contrast, requires 3:1 for the boundary of a component against its adjacent surface. The chip sits on the card, and the card is the panel color — not the background. Measured against panel: Airfield Blue's chip is at 3.03:1, passing by nothing at all, and Coffee Tan's is at 2.32:1, failing. The proposed values fix both, reaching 3.60:1 and 3.76:1 against panel respectively.
+
+
+(3) [FIXED] [v4] BODY TEXT ON THE BUTTON SURFACE FAILS IN TWO THEMES
+
+Not previously measured, in any version. The button color is a surface in three places — the user's own query bubble, the image card's fact-table data row, and the photo backing — and full-contrast text sits on it in the first two. Text color against button color:
+
+  * Airfield Blue
+      3.17:1 — fails
+
+  * Ocean Teal
+      3.17:1 — fails
+
+  * Olive Green
+      5.49:1 — passes
+
+  * Walnut Brown
+      7.24:1 — passes
+
+  * Coffee Tan
+      4.99:1 — passes
+
+What is failing is not decoration. It is the fact table — the three cells Section 5 describes as "looked up, not read," the ones whose whole purpose is to let a technician catch a wrong match in three words — and the user's own query bubble, which is where they read back the fault code they typed. Two options:
+
+- A. Darken the button surface in the two failing themes: Airfield Blue to #364044, Ocean Teal to #245B59. Both then clear 4.5:1. Cost: the button surface moves closer to the background, and the query bubble separates less from the screen behind it.
+- B. Drop the button-colored backing from the fact-table data row and the query bubble in all five themes. Text then sits on panel, where it measures 5.94:1 and 6.65:1 in the two failing themes and better in the rest. Cost: one step of visual separation, in a table that already has a border and a hairline under its header.
+
+Default taken: A, because it is confined to the two themes that fail and leaves the other three untouched, and because the query bubble losing separation from the background is a smaller loss than the fact table losing its surface in every theme. Added to the open decisions.
+
+
+(4) [FIXED] [v4] TWO COLORS ARE SPECIFIED THROUGHOUT AND DEFINED NOWHERE
+
+Sections 4 and 5 both list the card's theme variables. Section 4: "accent (both stamps, the button), panel (surface), line (borders), text (explanation), bg (text on the accent chips)." Section 5 adds "dim (capture note, secondary monospace)."
+
+The Color Palettes section defines five colors per theme: background, panel, button, text, accent. There is no line. There is no dim.
+
+They are load-bearing. The card's hairline border is line. The unselected scope button is described as "an outline" — that outline is line, and under SC 1.4.11 the boundary of a control needs 3:1. The capture note, the rail's lines 2 and 3, the fact table's header cells and the source stamps' dim half are all dim, and dim carries text, so it needs 4.5:1 against the surface it sits on.
+
+Undefined, they will be picked by whoever writes the view code, per theme, by eye, and nobody will measure them. Proposed, each derived by blending the theme's own text color toward its panel color until it clears the threshold with headroom — so the two colors stay inside the palette rather than being invented:
+
+  * Airfield Blue
+      dim: #84969E (4.51:1 on panel)
+      line: #69787E (3.03:1 on panel)
+
+  * Ocean Teal
+      dim: #84ACB0 (4.58:1 on panel)
+      line: #658B8D (3.03:1 on panel)
+
+  * Olive Green
+      dim: #A2AC99 (4.52:1 on panel)
+      line: #7D8E72 (3.04:1 on panel)
+
+  * Walnut Brown
+      dim: #A59C91 (4.57:1 on panel)
+      line: #867D71 (3.05:1 on panel)
+
+  * Coffee Tan
+      dim: #AD9E7C (4.56:1 on panel)
+      line: #897E68 (3.01:1 on panel)
+
+Note what this does to the word "dim." These values are dimmer than the text color and still readable, which is the entire trick — a capture note that is dim enough to read as secondary but not so dim it stops being text. The instinct to take it further should be resisted; every 0.1 below 4.5 is a criterion failed.
+
+
+(5) [FIXED] THE TYPE SCALE STOPS SCALING
+
+The Type section, after the size table: "Above the largest standard text sizes the layout may stop scaling and stay put, but nothing below 11 points ships."
+
+The first half of that sentence fails SC 1.4.4, Resize Text, which requires text to reach 200% with no loss of content or functionality. On iOS the default body size is 17 points; 200% is 34 points, which falls between the accessibility sizes AX2 and AX3. So "the largest standard text size" is well short of the criterion — it is roughly 135% — and the iOS type scale continues to AX5 at 53 points, which users genuinely select.
+
+  | Rule: the layout reflows through AX5. Below AX3, no loss of content or function is acceptable — that covers the 200% the criterion requires, with margin. From AX3 to AX5 the layout may simplify, but nothing may be truncated, hidden or made unreachable.
+  |
+  | Reflow means bands stack and containers grow. It never means text is clipped, and it never means a band scrolls inside itself. Section 4 already forbids the explanation band from scrolling internally; that rule now applies to every band in both cards.
+
+Two specific consequences:
+
+  | The fact table. Three center-aligned monospace columns whose widths are set by their contents cannot survive 53-point type on a 393-point screen. At AX3 and above it becomes three stacked label-and-value rows, left-aligned. Same six words, same order, same monospace, no box.
+  |
+  | The scope buttons. Two equal-width buttons side by side with "Image Search" and "Manual Search" in them will not hold at accessibility sizes. They stack vertically at AX3 and above.
+
+The second half of that sentence — "nothing below 11 points ships" — stands, and is good.
+
+
+(6) [FIXED] TAP TARGETS ARE A SETTING AND SHOULD BE A FLOOR
+
+Section 8: "Increase tap targets — pads the plus, cog and scope buttons out to a larger minimum. For gloves."
+
+Per the default-state rule above, this cannot be where the app's target sizes come from. SC 2.5.8 requires 24 × 24 as a floor; Apple's guidance requires 44 × 44; the app should meet the stricter one everywhere by default.
+
+  | Every control ships at 44 × 44 points minimum, whatever its drawn size. The plus, the cog, the send button, the scope buttons, the counter, the chevrons, the close controls, the card's action button, every row in the Library screen and every switch on the Accessibility screen.
+  |
+  | The setting stays, renamed. It raises the minimum to 60 × 60 for glove use, which is above anything a standard requires and is a real working condition rather than a compliance line.
+
+Worth stating plainly because it reframes the whole section: for this app, motor accessibility and glove use are the same requirement with two names. Every fix in finding (1) and finding (6) helps a technician wearing gauntlets on a cold morning exactly as much as it helps someone with a tremor. There is no tension to manage between the accessible design and the working design here — they are one design.
+
+
+(7) [FIXED] THE MOST IMPORTANT DISTINCTION IN THE APP IS INVISIBLE TO A SCREEN READER
+
+Section 4(b), on the manual card's explanation band: "The band opens with a subtle quotation treatment: a 2px accent rule down its left edge. No label, no badge, no stamp."
+
+That 2px rule is the only thing in the app that distinguishes the publisher's own instruction from a colleague's unverified note — and the reasoning given for it is explicitly about trust: "Just the mark that says these are not our words." A user of VoiceOver receives none of it. They get an unattributed paragraph, which is precisely the thing Section 4 says an unattributed paragraph must never be.
+
+This fails SC 1.3.1, Info and Relationships — information conveyed by presentation must be available programmatically — and it fails the app's own stated purpose harder than it fails the criterion.
+
+  | The manual card's explanation band is announced with a spoken prefix: "Quoted from the manual." The image card's capture note is announced with "Technician's note." Neither is drawn on screen; both are read.
+  |
+  | The visual 2px rule stays exactly as designed. This adds the spoken equivalent, it does not replace the mark.
+
+The same reasoning applies wherever the app's meaning rides on appearance. The scope buttons distinguish selected from unselected by fill versus outline, which is a shape difference and therefore passes SC 1.4.1 visually — but the state must also be exposed as a selected trait, not merely drawn.
+
+
+(8) [FIXED] THE PHOTOGRAPH HAS NO ALTERNATIVE TEXT
+
+Section 5(c) makes the photo the point of the card: "The photo is the answer; everything else in the card is a label for it." SC 1.1.1 requires a text alternative. None is specified.
+
+The fix is already sitting in the design and costs nothing to adopt, which is the pleasant kind of finding:
+
+  | The photo's accessible description is composed from the caption fields the user confirmed at import: item, problem, object, location and capture date. "Seat belt, webbing torn. Forklift FL-03, Bay C. Photographed 12 March 2026."
+  |
+  | It is never generated at the time of reading, and it never includes anything the model suggested but the user did not confirm. Section 5 already establishes that nothing unconfirmed is shown; nothing unconfirmed is spoken either. A photo saved with Skip, holding only date and object, is described with date and object — accurately and briefly — rather than being described richly and wrongly.
+
+
+(9) [FIXED] THE MOST IMPORTANT SCREEN IN THE APP IS A PICTURE OF TEXT
+
+Section 6 opens by calling the manual page view "the most important screen in the app — everything else is a way of getting here," and specifies it as the original PDF page "rendered at full quality. Not an extract, not the markdown, not a re-flow."
+
+For a blind or severely low-vision technician that screen is empty. Pinch to zoom does not help. A PDF's own text layer is sometimes readable by VoiceOver and sometimes is not, and for the scanned manuals this app explicitly expects, it never is. This engages SC 1.1.1 and SC 1.4.5, Images of Text.
+
+The design already contains the remedy and discards it. text.md exists for every indexed manual. It is what the search reads.
+
+  | The manual page view gains a text mode, reachable from the top bar. It renders that page's extracted text as real text: selectable, scaling with Dynamic Type through AX5, reflowing to the screen width.
+  |
+  | The rendered page stays the default. The reasoning in Section 6 for showing the page as printed is sound and is not disturbed — a fault table that converted badly is still readable as a picture of itself, for the people who can see pictures.
+  |
+  | In text mode the fault code the user searched for is the first thing announced and the initial focus, which is the spoken equivalent of Section 6's highlight. Where the position was not captured at import the page still opens, unmarked and unfocused, exactly as Section 6 already specifies. It is never guessed at.
+  |
+  | Where a manual imported with no text layer and failed OCR, text mode says so in the same words the import flow uses — "No readable text. This manual can be opened but not searched" — rather than opening blank.
+
+This is the finding with the largest gap between how easy it is to fix and how completely the app fails without it.
+
+
+(10) [DECIDE] THE TWO DECORATIVE FACES
+
+Brush Script MT carries "Welcome Technician." Times New Roman carries the chat box and the whole settings screen.
+
+Brush Script is a connected script face, and connected script is among the hardest things to read for low vision, for dyslexia, and for anyone using screen magnification where letterforms distort. It is decorative, it says nothing operational, and no criterion strictly forbids it. It stays. But:
+
+  | The welcome line scales with Dynamic Type like everything else, and substitutes to the system font when the user has Legibility Weight or Bold Text enabled — those settings are how someone tells the operating system that decorative type is a problem for them, and honoring them is not a redesign.
+
+Times New Roman is different, because it is not confined to decoration. It sets every button on the settings screen and the text in the chat box. Section 3's [DECIDE] already flags the operational risk in the chat box — zero against capital O, one against capital I, in the one field where a technician reads back F0429 before pressing send. Accessibility does not add a new argument so much as remove the argument for keeping it:
+
+  | Recommendation: take the split this document already proposed. The placeholder word "chat" stays in Times New Roman; the text the user actually types is monospace. The box looks as designed when empty and becomes unambiguous the moment it holds a fault code.
+
+That closes open decision 3, in the direction the document already leaned. The settings screen keeps Times New Roman throughout — it holds four words and no codes, and the character confusions cost nothing there.
+
+
+(11) [FIXED] STATUS MESSAGES ARE NOT ANNOUNCED
+
+SC 4.1.3, Status Messages: a change of status that does not take focus must still be available to assistive technology. The design has four and specifies announcement for none:
+
+- "Importing — 1 of 3" and its progress bar.
+- "PowerFlex 755 AC Drive · 512 pages · ready".
+- The answer card arriving in the thread.
+- The 1 / 3 counter changing as the user moves between matches.
+
+  | Each is announced without taking focus. Import progress announces at start, at each manual completing, and at the end — not per page, which would make a 512-page manual unusable.
+  |
+  | The card arriving announces its own first line, so a screen-reader user hears which object and manual answered before deciding whether to read further. This is the spoken form of the stamp row's job, and the reason the stamps are the first band.
+
+
+(12) [FIXED] FOCUS, AND THE 90% SHEET
+
+Nothing in the design addresses keyboard focus, which the app needs for Full Keyboard Access, Switch Control, and any technician using a hardware keyboard on a bench.
+
+  | The settings sheet is a modal. While it is open, focus is confined to it — the 10% strip of main screen visible around its edge is not focusable, and neither is anything behind it. Dismissing it returns focus to the cog that opened it.
+  |
+  | Every control has a visible focus indicator meeting 3:1 against its surroundings, which is what the newly defined line color is for.
+  |
+  | Focus order follows reading order in both cards: stamps, then title, then photo, then note, then table, then action. It is never determined by drawing order.
+  |
+  | SC 2.4.11, Focus Not Obscured: the raised keyboard must not hide the focused control. The chat box and its two scope buttons sit directly above the keyboard and are the most likely victims.
+
+
+- - -
+
+
+PART 2 — THE ACCESSIBILITY SCREEN, REWRITTEN
+--------------------------------------------
+
+Section 8's version had five switches. Three survive as written; two were doing a job they cannot do and are re-scoped per the default-state rule. The screen also gains something it did not have — a statement of what the app takes from the system, so the user is not hunting for an in-app switch that duplicates one they already set.
+
+
+What follows the system, and is listed here so the user knows it is honored:
+
+  * Text size
+      Dynamic Type, through AX5.
+
+  * Bold Text
+      Also substitutes the welcome line's script face.
+
+  * Reduce Motion
+      The settings sheet, the plus balloon and the page view cross-fade instead of sliding.
+
+  * Reduce Transparency
+      Any translucent surface becomes opaque. [v4] Added — the plus sheet and settings sheet are both described as layered.
+
+  * Differentiate Without Color
+      [v4] Added.
+
+  * Button Shapes
+      [v4] Added — draws the scope buttons' selected state more heavily.
+
+  * Legibility Weight
+      [v4] Added — see finding (10).
+
+  * VoiceOver, Switch Control, Full Keyboard Access, Voice Control
+      Supported throughout. Not settings; obligations.
+
+
+In-app overrides, for users who want this app different from the rest of the phone:
+
+  * Text size override
+      Overrides the system size for this app only. Some technicians want one app larger than everything else, and this is that.
+
+  * Higher contrast
+      Raises dim toward text throughout. [v4] Re-scoped: this now runs above a default that already conforms. It is not what makes the app conformant — the values in findings (2), (3) and (4) are.
+
+  * Larger tap targets
+      Raises the 44-point minimum to 60. [v4] Renamed from "Increase tap targets" and re-scoped per finding (6). For gloves.
+
+  * Always open manual pages as text
+      [v4] Added — makes text mode the default in the manual page view rather than the alternate. See finding (9).
+
+  * Monospace throughout
+      [v4] Added — extends the chat box's monospace treatment to every field, for users who find the mixed type scheme hard. Optional; the codes are already monospace everywhere that matters.
+
+
+All are switches or steppers. None changes the structure of any layout — they change size, color, motion and typeface only. That constraint from Section 8 is kept and is worth keeping: an accessibility setting that rearranges screens produces an app the user cannot get help with, because nobody else's copy looks like theirs.
+
+
+- - -
+
+
+PART 3 — WHAT DOES NOT APPLY
+----------------------------
+
+Recorded because a conformance report has to answer for every criterion, and "not applicable" is an answer that needs its reasoning written down once rather than reconstructed later.
+
+- Time-based media, all of SC 1.2 — the app has no audio and no video. If the Instructions screen ever gains a demonstration video, every one of these turns on at once.
+- SC 2.2.1, Timing Adjustable — nothing in the app expires. The one-second requirement is a performance floor, not a time limit on the user.
+- SC 2.3.1, Three Flashes — nothing flashes. Reduce Motion is honored regardless.
+- SC 3.3.8, Accessible Authentication — there is no account and no sign-in. This stays not-applicable only as long as that remains true.
+- SC 1.4.10, Reflow — written for two-dimensional scrolling on the web. The native equivalent is finding (5), which is where the work actually is.
+
+And one that does apply and is currently free:
+
+- SC 3.3.2, Labels or Instructions, and SC 3.3.7, Redundant Entry — the import flow's caption sheet has four fields. They need real labels rather than placeholder text inside the field, which vanishes the moment the user types. And per 3.3.7, importing six photos of the same machine must not ask for the object six times: the sheet carries the previous photo's object and location forward, editable. That is a plain usability win that a criterion happens to also require.
+
+
+- - -
+
+
+PART 4 — TESTING, AND THE CONFORMANCE REPORT
+--------------------------------------------
+
+Contrast and type size can be checked by calculation and should be, in a test that fails the build — every pair in findings (2), (3) and (4) is a unit test over the palette definitions, not a design review. The rest cannot be automated:
+
+  | Before any release: one full pass of every screen under VoiceOver with the display off, one under Switch Control, one at AX5, one under Full Keyboard Access, and one with Apple's Accessibility Inspector audit clean. The VoiceOver pass is done with the screen dark, because a sighted person running VoiceOver while watching the screen is testing something else entirely.
+  |
+  | Automated checks catch missing labels and failing contrast. They do not catch a reading order that is technically valid and makes no sense, and they cannot tell you that the app never says the explanation is a quotation. Both of those were findings above, and neither would have been caught by a tool.
+
+On the report itself:
+
+  | Procurement at a public entity asks for a VPAT — an Accessibility Conformance Report. The international edition covers WCAG, Section 508 and EN 301 549 in one document, which is the one to produce.
+  |
+  | It should be prepared or reviewed by someone qualified to make the claim, and it should be honest. A report that says "supports" everywhere is a report nobody experienced believes. "Partially supports," with the specific limitation stated, is both more credible and less dangerous — an overstated VPAT is a representation a buyer relies on.
+
+Nothing in this section is legal advice, and the mapping from the ADA to WCAG above is an engineering summary of published standards rather than an opinion about this product's obligations. Get that reviewed before making a claim in writing to a customer.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
+=======================================
+SECTION 10 — [NEW] [v4] THE AFM 3 MODELS
+=======================================
+
+The Overview calls Apple's on-device Foundation Model "the brain" and then, correctly, spends most of its length limiting what the brain is allowed to do. This section is about which brain, on which phone, and what happens on a phone that has neither.
+
+
+THE TWO MODELS
+--------------
+
+From Apple's press release, as quoted:
+
+  * AFM 3 Core
+      3 billion parameters, dense. Runs in 8 GB or 12 GB of unified memory.
+
+  * AFM 3 Core Advanced
+      20 billion parameters, sparse architecture, activating 1 to 4 billion at a time. Requires 12 GB.
+
+  | [v4] Naming. The brief calls the larger model both "Core Advanced" and "the Pro version." This document uses AFM 3 Core Advanced throughout, matching the press release. Worth settling early — "Pro" will otherwise be read as meaning the Pro phones, and the two do not correspond.
+
+What the sparse architecture buys is the reason the larger model is interesting at all. A dense 20B model would need roughly seven times Core's compute per token and would be unusable on a phone. Activating 1 to 4 billion parameters at a time means the compute per token lands in Core's neighborhood while the knowledge of a 20B model stays available. The trade is memory: every parameter has to be resident even though only a fraction is used for any given token. That is why the constraint is 12 GB of memory rather than a faster chip, and it is the single fact that shapes everything below.
+
+  | [DECIDE] [v4] The device mapping needs verifying before it is built on. The brief states that the 16 and 17 series carry 8 GB and that the 18 series is the first with 12 GB. Published specifications for the 17 series should be checked against that, because if any 17-series phone already has 12 GB then Core Advanced's installed base at launch is materially larger than the brief assumes, and that changes how much of the plan below is worth building.
+  |
+  | It does not, however, change any of the code. See the next heading — that is the point of it.
+
+
+THE PRINCIPLE: ASK, DO NOT INFER
+--------------------------------
+
+  | The app never decides what a device can do by identifying the device. It asks the system what is available and uses what it is given.
+
+This document has now reached the same principle from three unrelated directions, which is usually a sign it is the real one:
+
+- The Fault code rule: "Adding a manual from a maker the app has never seen requires no code change and no app update — there is no brand list to be missing from."
+- The README's hard constraint 6: "Size classes, not device checks. The app never branches on whether the device folds."
+- And now: no memory-size list, no device list, no model-name list.
+
+The specific failure being avoided is a table in the source that maps device identifiers to memory sizes. It will be wrong within a year. It is wrong the moment a phone ships that was not in the table, and the failure mode is the worst kind — a new flagship falling to the smallest configuration because it was not on a list written before it existed. The system knows what it has; the app asks.
+
+The same call also covers everything else that makes a model unavailable and has nothing to do with hardware: Apple Intelligence switched off, an unsupported region or language, Low Power Mode, insufficient free storage, a device still downloading model assets. A device check answers none of those. An availability check answers all of them in the same branch, which is also the branch that already exists for the no-model case.
+
+  | Consequence for the build: there is exactly one place in the app that asks which model is available, it is asked at the start of each import rather than cached at launch, and every other part of the app receives the answer as a capability level. Nothing else in the codebase knows that AFM 3 exists.
+
+
+WHAT THE BIGGER MODEL DOES NOT DO
+---------------------------------
+
+This has to come before the tiering, because it is where the intuition goes wrong.
+
+The Overview's rule is that the model never writes the answer. The explanation band is lifted verbatim from the manual; the capture note is the technician's own words. Neither is generated, in any tier, on any phone.
+
+  | Therefore a bigger model does not produce better answers. It cannot. The answer is a quotation, and a quotation is either the right passage or the wrong one.
+  |
+  | What a bigger model produces is a better index — more fault codes correctly extracted from an awkward table, a page mapping that holds where the front matter is unusual, a per-manual convention read correctly, an item name pulled from a heading rather than missed. All of that happens once, at import, while the user is not waiting.
+
+So the value of AFM 3 Core Advanced is entirely at import, and the honest description of the benefit is not "smarter answers" but "finds things the smaller model missed." That framing needs to survive into the interface, because the alternative — a user on an iPhone 18 believing their answers are more trustworthy than a colleague's on a 16 — is a false belief the app would have created about the accuracy of safety information.
+
+
+THE THREE CAPABILITY LEVELS
+---------------------------
+
+Named rather than numbered, deliberately: the README already has tiers numbered 3, 2, 1 in the opposite direction, and a second numbering would guarantee a conversation at cross purposes. See "What this replaces in the README" below.
+
+  * No model
+      Where: Apple Intelligence off, unsupported device, or the user declined. Also the fallback from either level below.
+      At import: PDF's own text layer, page markers, filename. Caption fields typed by hand.
+      At search: everything. The library, both card types, the page view, the one-second lookup — all unchanged.
+
+  * Core
+      Where: any device where the system reports the default model available. The baseline.
+      At import: fault-code table extraction, page-map construction, per-manual convention detection, item and object name extraction, caption drafting from photos.
+      At search: nothing on the critical path. See the next heading.
+
+  * Core Advanced
+      Where: any device where the system reports the larger model available.
+      At import: the same list, at higher quality. Specifically the cases Core gets wrong — fault tables spanning pages or columns, codes carrying footnote markers, OCR output from scanned manuals, front matter that breaks the printed-to-file page mapping, item names in figure captions rather than headings.
+      At search: nothing on the critical path. Same rule, no exception for the bigger model.
+
+The rule that binds them together, and the one most likely to be broken by accident:
+
+  | The three levels produce the same fields, in the same schema, with the same meanings. They differ in how much they populate and how often they are right. A library indexed on one level is fully usable at any other.
+  |
+  | No field exists only at Core Advanced. If the larger model can extract something the smaller cannot, that field exists at every level and is simply empty more often at the lower ones — which is exactly how the Fault code rule already handles a manual with no code table: "the fault-code half of the stamp is empty rather than blank-padded."
+
+Without that rule the app forks into two products, a card renders differently depending on which phone imported the manual, and the Library screen's "needs detail" list means something different on each device.
+
+
+[FIXED] THE MODEL AND THE ONE-SECOND BUDGET — A CONTRADICTION WITH THE README
+-----------------------------------------------------------------------------
+
+The Overview permits this:
+
+  | "At search, the model may help find things. Turning a messy query into search terms is a fair use of it."
+
+The repository README forbids it, in hard constraint 3: "No model call is ever on the critical path to displaying a page. The PDF page renders first; summaries stream in after, or never." And Section 2's acceptance criterion, carried in from the README in v3, requires send to card in under one second.
+
+Both cannot hold. A model call on the send-to-card path costs session setup, a cold model load on first use — which on a 20B sparse model is the expensive one, since all 20 billion parameters must be resident before the first token — prompt processing, and generation. The budget for the entire operation is one second.
+
+Settled in the README's favor, because the README's constraint is stated as inviolable and this document's permission is stated as a fair use:
+
+  | No model inference sits between the user pressing send and the card appearing. Not at Core, not at Core Advanced, not ever.
+  |
+  | Search runs against the finished index, lexically, exactly as the Indexing rule and the Search parameter rule already describe.
+  |
+  | Model-assisted query understanding is permitted in one place only: after the lexical search has returned nothing. The empty-result card specified in Section 4(5) appears first, on time, and a model-suggested reinterpretation may then arrive underneath it — "Did you mean the seat belt retractor on FL-03?" — as an addition to a card already on screen, never as a delay before one.
+
+This preserves what was actually valuable in the original permission. The messy query that needs interpreting is overwhelmingly the one that found nothing; the query that found the right page did not need help. The app now spends model time exactly where it can pay off and never where it costs the guarantee.
+
+
+MEMORY, HEAT AND BATTERY
+------------------------
+
+Core Advanced needs its full 20 billion parameters resident. The app also renders PDF pages at full quality and holds photos at capture resolution. On a 12 GB device, with the operating system taking its share, those cannot all be true at once, and the way iOS resolves it is by terminating the app.
+
+The README's hard constraint 7 already says peak memory during import must not scale with document size. This extends it:
+
+  | The model is loaded for import and released when import finishes. It is never resident while the manual page view is rendering a page at full quality, and never while a photo is open at capture resolution.
+  |
+  | On a system memory-pressure warning the model is released immediately and the import in flight continues at the next level down — Core Advanced falls back to Core, Core falls back to no model — rather than the app being killed. The manual records the level it was actually indexed at, which may differ from the level import started at.
+
+Heat and battery are the constraint nobody designs for and every field user hits:
+
+  | Import yields to the device. It pauses when the thermal state reaches serious and resumes when it drops, and it pauses below 20% battery unless the phone is charging. Low Power Mode holds import at Core or below regardless of what the device supports.
+  |
+  | The progress row says which, in plain words — "Paused — phone too warm" or "Paused — low battery." A technician whose import stopped needs to know it was a decision and not a failure. This is the same rule as the import flow's "failures are stated, not swallowed," applied to a pause rather than an error.
+
+A 512-page manual is already described as "minutes, not seconds" at Core. At Core Advanced it is longer, and this is the honest reason to run import in the background and keep the app usable throughout, which Section 7 already specifies.
+
+
+WHICH MODEL INDEXED WHAT
+------------------------
+
+A consequence of having levels at all, and one that has to be decided now because it changes what meta.json holds.
+
+  | meta.json records, per manual: the capability level used, the model version, and the date. A manual indexed at no model on a phone with Apple Intelligence switched off is not the same artifact as one indexed at Core Advanced, and in two years nobody will remember which was which.
+
+Then the upgrade case. A technician imports forty manuals on an iPhone 16, and buys an 18.
+
+  | Nothing re-indexes automatically. Re-indexing forty manuals would take hours, drain the battery, heat the phone, and — because the page map can change — silently move page numbers a technician has already written down. An app that quietly changes what page a fault code is on has done the one thing this document has repeatedly refused to do.
+  |
+  | The Library screen lists manuals indexed below the level now available, and offers re-indexing per manual and for all. The user starts it, on charge, knowing what it costs. Section 8 already puts "re-run indexing" on the manual's detail screen; this gives it a reason to be there and a prompt.
+  |
+  | Re-indexing never discards user edits. A corrected manual name, a corrected convention, an attached object — per the Manual name rule those are the user's, and a better model does not get to overrule a human who already fixed it.
+
+
+VERIFICATION: THE MODEL EXTRACTS, IT NEVER ASSERTS
+--------------------------------------------------
+
+The README's hard constraint 5 requires guided generation with @Generable and forbids prompting for JSON and parsing strings. That constraint is doing more work than it appears to, and it is what makes the level rule above enforceable: one Swift type per extracted structure, shared across all three levels, so a field that exists at Core Advanced cannot fail to exist at Core.
+
+Guided generation constrains the shape of the output. It does not constrain the truth of it. So:
+
+  | Every extracted value is checked against the source before it is stored. A fault code the model reports must appear literally in that page's text; a page number must be within the document; an item name must appear in the text it was drawn from. Anything that fails the check is discarded, not stored with a lower confidence and not shown.
+  |
+  | This is the mechanical form of what the Overview already promises — "the app is quoting, not reasoning." A hallucinated fault code that reaches the index is indistinguishable to the user from a real one, and it fails exactly the way the Page number rule warns about: "A confidently wrong page number is the worst failure this app can produce."
+
+This check is also the only defense that does not weaken as the model gets bigger. Larger models hallucinate less; they do not hallucinate never, and the consequence here is a technician sent to the wrong procedure on a live machine.
+
+
+WHAT THIS REPLACES IN THE README
+--------------------------------
+
+The README describes three tiers built 3 → 2 → 1: tier 3 no model, tier 2 Apple's on-device model, tier 1 "a local MLX model. Optional, built last, only if tier 2 proves the summary is worth having when the system model is down."
+
+  | The three named levels above replace that numbering. The README's ordering is inverted from ordinary usage — its "tier 3" is the base — and this document's Appendix already flags the tier language as needing replacement.
+  |
+  | The MLX tier should be dropped rather than deferred. It existed because the system model at roughly 3 billion parameters might not be good enough, and a bundled MLX model was the only way to do better on-device. AFM 3 Core Advanced is that better model, at 20 billion parameters, with no download to ship, no license to manage, no gigabytes added to the app, and no third-party dependency — which the README's Dependencies section describes as "something that has to be maintained alone in three years." Core Advanced answers the question MLX was there to answer, and answers it better on every axis the README cares about.
+  |
+  | The rest of the README's framing survives intact and is strengthened. "The AI layer is a convenience, never a dependency" is exactly the no-model level. Hard constraint 2 — tested by actually turning Apple Intelligence off rather than by mocking — should be extended to a third case: tested at no model, at Core, and at Core Advanced.
+
+
+WHAT IS NEVER USED
+------------------
+
+  | No server-side model, of any kind, under any condition. Apple's private server inference included.
+
+The README already names this trap precisely — that the cloud-backed type conforms to the same protocol as the on-device model and is one line away from correct code. It is worth repeating here because AFM 3 makes the temptation sharper rather than softer: once a design has levels, and a device sits at the bottom of them, routing that device's import to a server looks like generosity. It is a network call, it violates the README's first hard constraint, and it sends the user's manuals — which may be a customer's confidential documentation — off the device.
+
+The no-model level is the answer for a device that cannot run either model. It is already specified, it already works, and it is why the app functions in a plant basement.
+
+
+DECISIONS THIS RAISES
+---------------------
+
+  | [DECIDE] Whether Core Advanced is available to third-party apps at all. This is the load-bearing unknown and it should be settled before any of the above is built. The public framework has historically exposed the smaller on-device model; a 20-billion-parameter model may be reserved for the system's own features. If it is not available to apps, everything above collapses to two levels — no model and Core — and the rest of the plan is unaffected, which is the reason for writing it as levels rather than as a Core Advanced feature list.
+  |
+  | Everything else in this section is worth building either way. Ask-don't-infer, the level recorded in meta.json, the memory and thermal rules, the verification pass, and the critical-path rule are all correct with one model, two, or none.
+
+Also open:
+
+- Whether the user is told which level indexed a manual, or whether it stays in meta.json for support purposes only. Showing it invites the false belief the section warns about; hiding it makes "re-index for better results" arrive without explanation.
+- Whether a device that supports Core Advanced ever uses Core deliberately — a "faster import" option — or always takes the best available.
+- Whether to train an adapter for fault-table extraction. It is the single highest-value quality win available and it adds a training pipeline, an evaluation set, and a dependency on a specific model version that Apple will move. Not before the first release.
+- Whether the model drafts the photo's accessible description at import alongside item and problem, per Section 9 finding (8). It is the same extraction with the same confirmation step, and it would give every photo alt text without asking the user for more work.
+
+
+- - - - - - - - - - - - - - - - - - - - - - - - -
+
+
 ===============================
 APPENDIX — DECISIONS STILL OPEN
 ===============================
@@ -1212,6 +1819,15 @@ Collected from the [DECIDE] marks above.
 7. Taking a photo from inside the app — third icon in the plus sheet, camera inside the picker, or not at all.
 8. Coffee Tan — accept the rebuilt values, or re-pull the palette from the source image once permission comes back. [v3] Re-pulling is now the stronger option: the rebuild dropped one of the original five colors and left Coffee Tan's button identical to Walnut Brown's.
 9. [v3] Backup — the library ships marked for inclusion in the device's standard backup (default taken), or is excluded if size or licensing demands it.
+10. [v4] The accent values in Section 9 finding (2) — accept #468AA8 for Airfield Blue and #9B8E7D for Coffee Tan, or re-pull both from their source images. This closes decision 2 with numbers; it interacts with decision 8, since Coffee Tan is being patched for the third time.
+11. [v4] The button-surface contrast failure, Section 9 finding (3) — darken the button color in Airfield Blue and Ocean Teal (default taken), or drop the button-colored backing from the fact table and query bubble in all five themes.
+12. [v4] The line and dim values in Section 9 finding (4) — accept the derived values, or pick them from the source images. They cannot stay undefined; Sections 4 and 5 both depend on them.
+13. [v4] Whether AFM 3 Core Advanced is available to third-party apps. The load-bearing unknown in Section 10, and the only one that changes what gets built. Settle before starting.
+14. [v4] The device-memory mapping in Section 10 — verify the 17 series against published specifications. It changes how large Core Advanced's installed base is at launch; it changes no code.
+15. [v4] Whether the user is shown which capability level indexed each manual, or whether it stays in meta.json.
+16. [v4] Whether the model drafts each photo's accessible description at import, alongside item and problem.
+
+  | [v4] Note on decision 3, the chat box typeface. Section 9 finding (10) recommends closing it in favor of the split already proposed here — Times New Roman placeholder, monospace typed text. It is left in this list because it is your call, but the accessibility case and the fault-code misreading case now point the same way.
 
 
 - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -1230,3 +1846,10 @@ Items in manual-library that this document now contradicts, and which need updat
 5. The Swift package will not compile — files sit at the repository root; Swift expects them in Sources/ and Tests/.
 6. plan.md and prompt.md are not committed — api-verification.md cites them throughout and none of it can be checked.
 7. Palette source images — pending permission from their creator. Note this in the repository so the reason is not lost.
+8. [v4] The three tiers — superseded by Section 10's three named capability levels. The README's numbering runs 3 → 2 → 1 with tier 3 as the base, which inverts ordinary usage and will be misread. Replace the section rather than renumber it.
+9. [v4] Tier 1, the local MLX model — drop it. Section 10 gives the reasoning: AFM 3 Core Advanced answers the question MLX was there to answer, with no bundled weights, no third-party dependency, and no gigabytes in the app.
+10. [v4] Hard constraint 3, "no model call on the critical path" — consistent, and now the deciding constraint in a contradiction with this document's Overview. See Section 10. The README wins; this document was corrected. No change needed to the README, but the constraint should note that query interpretation is permitted only after an empty result has already been shown.
+11. [v4] Hard constraint 2, "tier 3 works with no model available" — extend the test matrix from two states to three: no model, Core, Core Advanced. Still tested by turning Apple Intelligence off rather than by mocking.
+12. [v4] Hard constraint 4 names an iPhone 16 Pro Max as the device floor for the one-second measurement. Keep it, and note why it is the right floor: it is the least capable device the app supports, and per Section 10 it may sit at the Core level while a newer phone sits at Core Advanced. The one-second guarantee is a lexical-search guarantee and must hold at every level, including no model.
+13. [v4] The README's Dependencies section lists the stack as Swift, SwiftUI, SwiftData, PDFKit, Vision and SQLite FTS5. Section 9's testing requirements add no dependency — Accessibility Inspector, VoiceOver, Switch Control and Full Keyboard Access are all system facilities. Worth stating so accessibility work is not deferred on a false expectation of cost.
+14. [v4] Neither the README nor this document mentions accessibility anywhere before Section 9. Given that the buyers most likely to have a procurement requirement are exactly the public entities technicians work for, it belongs in the README's constraints rather than in a design document appendix.
